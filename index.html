@@ -1,1 +1,670 @@
-hello world
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnolia Storage — Competitor Pricing Scanner</title>
+<style>
+  :root {
+    --primary: #1a365d;
+    --primary-light: #2a5298;
+    --accent: #e53e3e;
+    --green: #38a169;
+    --green-bg: #f0fff4;
+    --red-bg: #fff5f5;
+    --yellow-bg: #fffff0;
+    --gray-50: #f7fafc;
+    --gray-100: #edf2f7;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e0;
+    --gray-500: #718096;
+    --gray-700: #4a5568;
+    --gray-800: #2d3748;
+    --gray-900: #1a202c;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    line-height: 1.6;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 32px 24px 24px;
+    text-align: center;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .header .subtitle { font-size: 14px; opacity: 0.85; }
+  .header .location { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--gray-200);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+  .card-meta a { color: var(--primary-light); text-decoration: none; }
+
+  /* My Pricing Editor */
+  .pricing-editor {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--primary);
+  }
+  .pricing-editor h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
+  .price-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .price-input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-500);
+    margin-bottom: 4px;
+  }
+  .price-input-group input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-800);
+    transition: border-color 0.2s;
+  }
+  .price-input-group input:focus {
+    outline: none;
+    border-color: var(--primary-light);
+  }
+
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge.low { background: var(--green-bg); color: var(--green); }
+  .badge.high { background: var(--red-bg); color: var(--accent); }
+  .badge.mid { background: var(--yellow-bg); color: #b7791f; }
+  .badge.na { background: var(--gray-100); color: var(--gray-500); }
+
+  .diff { font-size: 11px; font-weight: 600; margin-left: 4px; }
+  .diff.save { color: var(--green); }
+  .diff.over { color: var(--accent); }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    text-align: center;
+  }
+  .summary-card .label { font-size: 12px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-card .value { font-size: 28px; font-weight: 800; color: var(--primary); margin: 4px 0; }
+  .summary-card .sub { font-size: 12px; color: var(--gray-500); }
+
+  /* Chart area */
+  .chart-container {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .chart-container h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--gray-800); }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label { width: 160px; font-size: 12px; font-weight: 600; color: var(--gray-700); text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 28px; background: var(--gray-100); border-radius: 6px; position: relative; overflow: hidden; }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    transition: width 0.6s ease;
+    min-width: 60px;
+  }
+  .bar-fill.yours { background: var(--primary); }
+  .bar-fill.competitor { background: var(--gray-300); color: var(--gray-700); }
+  .bar-fill.cheaper-bar { background: #c6f6d5; color: var(--green); }
+  .bar-fill.pricier-bar { background: #fed7d7; color: var(--accent); }
+
+  /* Unit size selector */
+  .unit-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .unit-btn {
+    padding: 6px 14px;
+    border: 2px solid var(--gray-200);
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--gray-700);
+  }
+  .unit-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+
+  /* Notes */
+  .notes {
+    background: #fffff0;
+    border: 1px solid #fefcbf;
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 13px;
+    color: #744210;
+    margin-top: 16px;
+  }
+  .notes strong { color: #975a16; }
+
+  .last-updated {
+    text-align: center;
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 24px;
+    padding-bottom: 32px;
+  }
+
+  /* Distance badge */
+  .dist-badge {
+    font-size: 11px;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+
+  @media (max-width: 640px) {
+    .bar-label { width: 100px; font-size: 11px; }
+    .price-inputs { grid-template-columns: repeat(2, 1fr); }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Magnolia Storage</h1>
+  <div class="subtitle">Competitor Pricing Scanner</div>
+  <div class="location">7427 FM 1488, Magnolia, TX 77354</div>
+</div>
+
+<div class="container">
+
+  <!-- My Pricing Editor -->
+  <div class="pricing-editor">
+    <h3>Your Pricing (Editable)</h3>
+    <div class="price-inputs">
+      <div class="price-input-group">
+        <label>5x10</label>
+        <input type="number" id="my-5x10" value="25" min="0" step="1" onchange="refreshAll()">
+      </div>
+      <div class="price-input-group">
+        <label>10x10</label>
+        <input type="number" id="my-10x10" value="87" min="0" step="1" onchange="refreshAll()">
+      </div>
+      <div class="price-input-group">
+        <label>10x15</label>
+        <input type="number" id="my-10x15" value="115" min="0" step="1" onchange="refreshAll()">
+      </div>
+      <div class="price-input-group">
+        <label>10x20</label>
+        <input type="number" id="my-10x20" value="165" min="0" step="1" onchange="refreshAll()">
+      </div>
+      <div class="price-input-group">
+        <label>10x30</label>
+        <input type="number" id="my-10x30" value="280" min="0" step="1" onchange="refreshAll()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid" id="summaryGrid"></div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('chart')">Chart View</button>
+    <button class="tab-btn" onclick="switchTab('details')">Facility Details</button>
+  </div>
+
+  <!-- CHART TAB -->
+  <div class="tab-content active" id="tab-chart">
+    <div class="unit-selector" id="unitSelectorChart"></div>
+    <div class="chart-container">
+      <h3 id="chartTitle">Price Comparison</h3>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+  </div>
+
+  <!-- DETAILS TAB -->
+  <div class="tab-content" id="tab-details">
+    <div id="detailCards"></div>
+  </div>
+
+  <div class="notes">
+    <strong>Data Notes:</strong> Competitor pricing was verified on Feb 24, 2026 by visiting each facility's website directly via Chrome. Some facilities use dynamic/promotional pricing that changes frequently. Prices marked "N/A" mean that unit size isn't offered or pricing couldn't be confirmed. Public Storage uses non-standard unit sizes — closest equivalents are shown. Storage King USA is covered parking only (not enclosed units). Distances are approximate.
+  </div>
+
+  <div class="last-updated">Last scanned: February 24, 2026</div>
+</div>
+
+<script>
+// ============================================
+// DATA — Edit competitor info here
+// ============================================
+const competitors = [
+  {
+    name: "Lockaway Storage",
+    address: "8215 FM 1488, Magnolia, TX 77354",
+    phone: "(281) 317-8645",
+    distance: "~1 mi",
+    distanceMi: 1,
+    website: "https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",
+    rating: 4.9,
+    reviews: 235,
+    amenities: ["Climate Control", "Elevator", "Online Bill Pay", "24/7 Access", "Security Cameras", "Gate", "Drive-Up"],
+    notes: "All units climate-controlled interior — no non-climate drive-up enclosed units available. Promos: 40% off 4 months (online), 2 months 50% off (in-store). Prices shown are standard online rates. 10x20 ($192) excluded: climate-only.",
+    pricing: {
+      "5x10": 59,
+      "10x10": 49,
+      "10x15": 104,
+      "10x20": null,
+      "10x30": 432
+    }
+  },
+  {
+    name: "Public Storage (FM 1488)",
+    address: "9720 FM 1488 Rd, Magnolia, TX 77354",
+    phone: "(281) 766-4777",
+    distance: "~4.5 mi",
+    distanceMi: 4.5,
+    website: "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
+    rating: 4.8,
+    reviews: 510,
+    amenities: ["Climate Control", "Drive-Up", "Elevator", "Security Cameras", "Gate", "Onsite Manager"],
+    notes: "Non-standard sizes only (5x14, 5x15, 7x14, 10x14, 10x19, 10x30, 10x40, 12x28). $1 first month promo. Admin fee: $29. Closest equivalents shown. 10x20 equiv = 10x19 drive-up ($85).",
+    pricing: {
+      "5x10": 46,
+      "10x10": 90,
+      "10x15": 104,
+      "10x20": 85,
+      "10x30": 41
+    }
+  },
+  {
+    name: "Public Storage (FM 2978)",
+    address: "32010 FM 2978, The Woodlands, TX 77354",
+    phone: "(281) 746-9618",
+    distance: "~6 mi",
+    distanceMi: 6,
+    website: "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
+    rating: 4.8,
+    reviews: 325,
+    amenities: ["Climate Control", "Elevator", "24/7 Kiosk", "Security Cameras", "Gate", "Moving Supplies"],
+    notes: "$1 first month promo. Admin fee: $29. Limited sizes available — no 10x15 or 10x30 listed currently.",
+    pricing: {
+      "5x10": 18,
+      "10x10": 48,
+      "10x15": null,
+      "10x20": 113,
+      "10x30": null
+    }
+  },
+  {
+    name: "SmartStop Self Storage",
+    address: "32620 FM 2978, Magnolia, TX 77354",
+    phone: "(281) 602-8910",
+    distance: "~5 mi",
+    distanceMi: 5,
+    website: "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
+    rating: 4.9,
+    reviews: 140,
+    amenities: ["Climate Control", "Drive-Up", "Video Surveillance", "Admin Fee $29", "Indoor Units"],
+    notes: "Prices NOT published on website — must call (281) 602-8910. Up to 50% off + free 1st month promo. Sizes 5x5 to 10x30. All prices below are estimates from aggregators.",
+    pricing: {
+      "5x10": null,
+      "10x10": null,
+      "10x15": null,
+      "10x20": null,
+      "10x30": null
+    }
+  },
+  {
+    name: "Honea Egypt Self Storage",
+    address: "718 Honea Egypt Rd, Magnolia, TX 77354",
+    phone: "(281) 789-4188",
+    distance: "~5.5 mi",
+    distanceMi: 5.5,
+    website: "https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",
+    rating: 4.6,
+    reviews: 25,
+    amenities: ["Climate Control", "Indoor", "3 Floors", "Security Cameras", "Gate", "Onsite Manager"],
+    notes: "All units climate-controlled interior. 3-story building. No 10x15 or 10x20 currently available. Prices verified from website.",
+    pricing: {
+      "5x10": 82,
+      "10x10": 124,
+      "10x15": null,
+      "10x20": null,
+      "10x30": 450
+    }
+  },
+  {
+    name: "Montgomery Self Storage",
+    address: "33319 Bear Branch Ln, Magnolia, TX 77354",
+    phone: "(281) 259-8106",
+    distance: "~6 mi",
+    distanceMi: 6,
+    website: "https://montgomeryss.com/locations/magnolia-tx/",
+    rating: 4.5,
+    reviews: 32,
+    amenities: ["Climate Control", "Ground Floor", "Drive-Up", "Online Bill Pay", "Price Lock Guarantee"],
+    notes: "Non-climate and climate options. Prices shown are non-climate. Climate: 5x10 $65, 10x10 $135, 10x20 $240. No 10x30 available.",
+    pricing: {
+      "5x10": 55,
+      "10x10": 80,
+      "10x15": 135,
+      "10x20": 145,
+      "10x30": null
+    }
+  },
+  {
+    name: "Woodlands Storage & Office",
+    address: "31711 FM 2978, Magnolia, TX 77354",
+    phone: "(281) 769-7365",
+    distance: "~5.5 mi",
+    distanceMi: 5.5,
+    website: "https://www.woodlandssao.com/units",
+    rating: 5.0,
+    reviews: 48,
+    amenities: ["24/7 Access", "Vehicle Storage", "Security Cameras", "Gate", "Fenced & Lighted", "Unit Alarms", "10% Military Discount"],
+    notes: "Locally owned. 50% off 1st month promo. Only 10x10, 12x10 ($55), and 12x30 ($255) available. No small or mid-size units.",
+    pricing: {
+      "5x10": null,
+      "10x10": 47,
+      "10x15": null,
+      "10x20": null,
+      "10x30": 255
+    }
+  },
+  {
+    name: "Storage King USA",
+    address: "33110 Egypt Ln, Magnolia, TX 77354",
+    phone: "(936) 207-2090",
+    distance: "~7 mi",
+    distanceMi: 7,
+    website: "https://www.storagekingusa.com/locations/texas/magnolia/storage-king-usa-magnolia-tx/",
+    rating: 4.7,
+    reviews: 40,
+    amenities: ["24/7 Access", "Drive-Up", "Covered Parking", "Security Cameras", "Gate", "Onsite Manager", "RV Storage", "Power-Equipped"],
+    notes: "RV/Boat covered parking ONLY — no enclosed storage units. All spaces are open-air covered parking. Prices excluded from comparison (not enclosed).",
+    pricing: {
+      "5x10": null,
+      "10x10": null,
+      "10x15": null,
+      "10x20": null,
+      "10x30": null
+    }
+  }
+];
+
+const unitSizes = ["5x10", "10x10", "10x15", "10x20", "10x30"];
+let selectedUnit = "10x10";
+
+function getMyPricing() {
+  const p = {};
+  unitSizes.forEach(s => {
+    const v = parseFloat(document.getElementById('my-' + s).value);
+    p[s] = isNaN(v) ? 0 : v;
+  });
+  return p;
+}
+
+// ============================================
+// SUMMARY
+// ============================================
+function renderSummary() {
+  const my = getMyPricing();
+  const grid = document.getElementById('summaryGrid');
+
+  // Count competitors with pricing for comparison
+  let cheaper = 0, pricier = 0, totalDiff = 0, compared = 0;
+  competitors.forEach(c => {
+    unitSizes.forEach(s => {
+      if (c.pricing[s] !== null && my[s] > 0) {
+        compared++;
+        if (c.pricing[s] < my[s]) cheaper++;
+        else if (c.pricing[s] > my[s]) pricier++;
+        totalDiff += (my[s] - c.pricing[s]);
+      }
+    });
+  });
+
+  // Market avg for selected unit
+  let prices = competitors.map(c => c.pricing[selectedUnit]).filter(p => p !== null);
+  let avg = prices.length ? (prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
+  let myPrice = my[selectedUnit];
+  let position = myPrice <= avg ? "Below Avg" : "Above Avg";
+  let posColor = myPrice <= avg ? "var(--green)" : "var(--accent)";
+
+  grid.innerHTML = `
+    <div class="summary-card">
+      <div class="label">Competitors Tracked</div>
+      <div class="value">${competitors.length}</div>
+      <div class="sub">${competitors.filter(c=>c.distanceMi<=5).length} within 5 miles</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Your ${selectedUnit} Price</div>
+      <div class="value">$${myPrice}</div>
+      <div class="sub" style="color:${posColor}">${position} (Mkt avg: $${avg.toFixed(0)})</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Cheaper Comparisons</div>
+      <div class="value" style="color:var(--accent)">${cheaper}</div>
+      <div class="sub">of ${compared} price points</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Pricier Comparisons</div>
+      <div class="value" style="color:var(--green)">${pricier}</div>
+      <div class="sub">of ${compared} price points</div>
+    </div>
+  `;
+}
+
+// ============================================
+// CHART
+// ============================================
+function renderChart() {
+  const my = getMyPricing();
+  const chart = document.getElementById('barChart');
+  const title = document.getElementById('chartTitle');
+  title.textContent = `${selectedUnit} Unit — Price Comparison`;
+
+  let entries = [{name: "Magnolia Storage (You)", price: my[selectedUnit], yours: true}];
+  competitors.forEach(c => {
+    if (c.pricing[selectedUnit] !== null) {
+      entries.push({name: c.name, price: c.pricing[selectedUnit], yours: false, distance: c.distance, website: c.website});
+    }
+  });
+
+  let maxPrice = Math.max(...entries.map(e => e.price), 1);
+
+  let html = '';
+  entries.sort((a,b) => a.price - b.price).forEach(e => {
+    let pct = (e.price / maxPrice) * 100;
+    let cls = e.yours ? 'yours' : (e.price < my[selectedUnit] ? 'cheaper-bar' : (e.price > my[selectedUnit] ? 'pricier-bar' : 'competitor'));
+    let label = e.yours ? e.name : `<a href="${e.website}" target="_blank" style="color:inherit;text-decoration:none;border-bottom:1px dashed var(--gray-300);">${e.name}</a> (${e.distance})`;
+    html += `
+      <div class="bar-row">
+        <div class="bar-label">${label}</div>
+        <div class="bar-track">
+          <div class="bar-fill ${cls}" style="width:${pct}%">$${e.price}/mo</div>
+        </div>
+      </div>`;
+  });
+
+  chart.innerHTML = html;
+}
+
+// ============================================
+// DETAILS
+// ============================================
+function renderDetails() {
+  const container = document.getElementById('detailCards');
+  let html = '';
+  competitors.forEach(c => {
+    let pricingHtml = unitSizes.map(s =>
+      `<span style="margin-right:14px;"><strong>${s}:</strong> ${c.pricing[s] !== null ? '$'+c.pricing[s] : '<span style="color:var(--gray-500)">N/A</span>'}</span>`
+    ).join('');
+
+    html += `
+      <div class="card">
+        <div class="card-title">${c.name} <span class="dist-badge">${c.distance}</span></div>
+        <div class="card-meta">
+          ${c.address} ${c.phone ? '&nbsp;|&nbsp; ' + c.phone : ''} &nbsp;|&nbsp;
+          <a href="${c.website}" target="_blank">Website</a>
+          ${c.rating ? ' &nbsp;|&nbsp; ' + c.rating + ' &#9733; (' + c.reviews + ' reviews)' : ''}
+        </div>
+        <div style="margin-bottom:8px; font-size:13px;">${pricingHtml}</div>
+        <div style="font-size:12px; color:var(--gray-500); margin-bottom:6px;">
+          <strong>Amenities:</strong> ${c.amenities.join(', ')}
+        </div>
+        <div style="font-size:12px; color:#975a16; background:#fffff0; padding:6px 10px; border-radius:6px;">
+          ${c.notes}
+        </div>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ============================================
+// UNIT SELECTOR
+// ============================================
+function renderUnitSelectors() {
+  ['unitSelectorChart'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = unitSizes.map(s =>
+      `<button class="unit-btn ${s === selectedUnit ? 'active' : ''}" onclick="selectUnit('${s}')">${s}</button>`
+    ).join('');
+  });
+}
+
+function selectUnit(size) {
+  selectedUnit = size;
+  refreshAll();
+}
+
+// ============================================
+// TABS
+// ============================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['chart','details'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ============================================
+// REFRESH
+// ============================================
+function refreshAll() {
+  renderSummary();
+  renderUnitSelectors();
+  renderChart();
+  renderDetails();
+}
+
+// Init
+refreshAll();
+</script>
+
+</body>
+</html>
