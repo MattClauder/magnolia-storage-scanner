@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-24 Manual",
+  "lastUpdated": "2026-02-25 01:21 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -10,9 +10,23 @@
       "website": "https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",
       "rating": 4.9,
       "reviews": 235,
-      "amenities": ["Climate Control", "Elevator", "Online Bill Pay", "24/7 Access", "Security Cameras", "Gate", "Drive-Up"],
+      "amenities": [
+        "Climate Control",
+        "Elevator",
+        "Online Bill Pay",
+        "24/7 Access",
+        "Security Cameras",
+        "Gate",
+        "Drive-Up"
+      ],
       "notes": "All units climate-controlled interior. Promos: 40% off 4 months (online), 2 months 50% off (in-store).",
-      "pricing": {"5x10": 59, "10x10": 49, "10x15": 104, "10x20": null, "10x30": 432}
+      "pricing": {
+        "5x10": null,
+        "10x10": null,
+        "10x15": null,
+        "10x20": null,
+        "10x30": null
+      }
     },
     {
       "name": "Public Storage (FM 1488)",
@@ -23,9 +37,22 @@
       "website": "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
       "rating": 4.8,
       "reviews": 510,
-      "amenities": ["Climate Control", "Drive-Up", "Elevator", "Security Cameras", "Gate", "Onsite Manager"],
+      "amenities": [
+        "Climate Control",
+        "Drive-Up",
+        "Elevator",
+        "Security Cameras",
+        "Gate",
+        "Onsite Manager"
+      ],
       "notes": "Non-standard sizes. $1 first month promo. Admin fee: $29. Closest equivalents shown.",
-      "pricing": {"5x10": 46, "10x10": 90, "10x15": 104, "10x20": 85, "10x30": 41}
+      "pricing": {
+        "5x10": 18,
+        "10x10": 42,
+        "10x15": 121,
+        "10x20": 85,
+        "10x30": 41
+      }
     },
     {
       "name": "Public Storage (FM 2978)",
@@ -36,9 +63,22 @@
       "website": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
       "rating": 4.8,
       "reviews": 325,
-      "amenities": ["Climate Control", "Elevator", "24/7 Kiosk", "Security Cameras", "Gate", "Moving Supplies"],
+      "amenities": [
+        "Climate Control",
+        "Elevator",
+        "24/7 Kiosk",
+        "Security Cameras",
+        "Gate",
+        "Moving Supplies"
+      ],
       "notes": "$1 first month promo. Admin fee: $29. Limited sizes available.",
-      "pricing": {"5x10": 18, "10x10": 48, "10x15": null, "10x20": 113, "10x30": null}
+      "pricing": {
+        "5x10": 10,
+        "10x10": 46,
+        "10x15": null,
+        "10x20": 138,
+        "10x30": null
+      }
     },
     {
       "name": "SmartStop Self Storage",
@@ -49,9 +89,21 @@
       "website": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
       "rating": 4.9,
       "reviews": 140,
-      "amenities": ["Climate Control", "Drive-Up", "Video Surveillance", "Admin Fee $29", "Indoor Units"],
-      "notes": "Prices NOT published online â must call (281) 602-8910. Up to 50% off + free 1st month promo.",
-      "pricing": {"5x10": null, "10x10": null, "10x15": null, "10x20": null, "10x30": null}
+      "amenities": [
+        "Climate Control",
+        "Drive-Up",
+        "Video Surveillance",
+        "Admin Fee $29",
+        "Indoor Units"
+      ],
+      "notes": "Prices NOT published online \u00e2\u0080\u0094 must call (281) 602-8910. Up to 50% off + free 1st month promo.",
+      "pricing": {
+        "5x10": null,
+        "10x10": null,
+        "10x15": null,
+        "10x20": null,
+        "10x30": null
+      }
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -62,9 +114,22 @@
       "website": "https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",
       "rating": 4.6,
       "reviews": 25,
-      "amenities": ["Climate Control", "Indoor", "3 Floors", "Security Cameras", "Gate", "Onsite Manager"],
+      "amenities": [
+        "Climate Control",
+        "Indoor",
+        "3 Floors",
+        "Security Cameras",
+        "Gate",
+        "Onsite Manager"
+      ],
       "notes": "All units climate-controlled interior. 3-story building.",
-      "pricing": {"5x10": 82, "10x10": 124, "10x15": null, "10x20": null, "10x30": 450}
+      "pricing": {
+        "5x10": null,
+        "10x10": 124,
+        "10x15": null,
+        "10x20": null,
+        "10x30": 450
+      }
     },
     {
       "name": "Montgomery Self Storage",
@@ -75,9 +140,21 @@
       "website": "https://montgomeryss.com/locations/magnolia-tx/",
       "rating": 4.5,
       "reviews": 32,
-      "amenities": ["Climate Control", "Ground Floor", "Drive-Up", "Online Bill Pay", "Price Lock Guarantee"],
+      "amenities": [
+        "Climate Control",
+        "Ground Floor",
+        "Drive-Up",
+        "Online Bill Pay",
+        "Price Lock Guarantee"
+      ],
       "notes": "Non-climate and climate options. Prices shown are non-climate.",
-      "pricing": {"5x10": 55, "10x10": 80, "10x15": 135, "10x20": 145, "10x30": null}
+      "pricing": {
+        "5x10": 55,
+        "10x10": 80,
+        "10x15": 135,
+        "10x20": 145,
+        "10x30": null
+      }
     },
     {
       "name": "Woodlands Storage & Office",
@@ -88,9 +165,23 @@
       "website": "https://www.woodlandssao.com/units",
       "rating": 5.0,
       "reviews": 48,
-      "amenities": ["24/7 Access", "Vehicle Storage", "Security Cameras", "Gate", "Fenced & Lighted", "Unit Alarms", "10% Military Discount"],
+      "amenities": [
+        "24/7 Access",
+        "Vehicle Storage",
+        "Security Cameras",
+        "Gate",
+        "Fenced & Lighted",
+        "Unit Alarms",
+        "10% Military Discount"
+      ],
       "notes": "Locally owned. 50% off 1st month promo. Limited sizes available.",
-      "pricing": {"5x10": null, "10x10": 47, "10x15": null, "10x20": null, "10x30": 255}
+      "pricing": {
+        "5x10": null,
+        "10x10": null,
+        "10x15": null,
+        "10x20": null,
+        "10x30": null
+      }
     },
     {
       "name": "Storage King USA",
@@ -101,9 +192,24 @@
       "website": "https://www.storagekingusa.com/locations/texas/magnolia/storage-king-usa-magnolia-tx/",
       "rating": 4.7,
       "reviews": 40,
-      "amenities": ["24/7 Access", "Drive-Up", "Covered Parking", "Security Cameras", "Gate", "Onsite Manager", "RV Storage", "Power-Equipped"],
-      "notes": "RV/Boat covered parking ONLY â no enclosed storage units.",
-      "pricing": {"5x10": null, "10x10": null, "10x15": null, "10x20": null, "10x30": null}
+      "amenities": [
+        "24/7 Access",
+        "Drive-Up",
+        "Covered Parking",
+        "Security Cameras",
+        "Gate",
+        "Onsite Manager",
+        "RV Storage",
+        "Power-Equipped"
+      ],
+      "notes": "RV/Boat covered parking ONLY \u00e2\u0080\u0094 no enclosed storage units.",
+      "pricing": {
+        "5x10": null,
+        "10x10": null,
+        "10x15": null,
+        "10x20": null,
+        "10x30": null
+      }
     }
   ]
 }
