@@ -261,6 +261,18 @@
     margin-left: 6px;
   }
 
+  /* Loading indicator */
+  .loading-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--green-bg);
+    color: var(--green);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+
   @media (max-width: 640px) {
     .bar-label { width: 100px; font-size: 11px; }
     .price-inputs { grid-template-columns: repeat(2, 1fr); }
@@ -329,173 +341,48 @@
   </div>
 
   <div class="notes">
-    <strong>Data Notes:</strong> Competitor pricing was verified on Feb 24, 2026 by visiting each facility's website directly via Chrome. Some facilities use dynamic/promotional pricing that changes frequently. Prices marked "N/A" mean that unit size isn't offered or pricing couldn't be confirmed. Public Storage uses non-standard unit sizes — closest equivalents are shown. Storage King USA is covered parking only (not enclosed units). Distances are approximate.
+    <strong>Data Notes:</strong> Competitor pricing is auto-updated daily by scanning each facility's website. Some facilities use dynamic/promotional pricing that changes frequently. Prices marked "N/A" mean that unit size isn't offered or pricing couldn't be confirmed. Public Storage uses non-standard unit sizes — closest equivalents are shown. Storage King USA is covered parking only (not enclosed units). Distances are approximate.
   </div>
 
-  <div class="last-updated">Last scanned: February 24, 2026</div>
+  <div class="last-updated" id="lastUpdated">Loading pricing data...</div>
 </div>
 
 <script>
 // ============================================
-// DATA — Edit competitor info here
+// DATA — Loaded from data.json (auto-updated daily)
 // ============================================
-const competitors = [
-  {
-    name: "Lockaway Storage",
-    address: "8215 FM 1488, Magnolia, TX 77354",
-    phone: "(281) 317-8645",
-    distance: "~1 mi",
-    distanceMi: 1,
-    website: "https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",
-    rating: 4.9,
-    reviews: 235,
-    amenities: ["Climate Control", "Elevator", "Online Bill Pay", "24/7 Access", "Security Cameras", "Gate", "Drive-Up"],
-    notes: "All units climate-controlled interior — no non-climate drive-up enclosed units available. Promos: 40% off 4 months (online), 2 months 50% off (in-store). Prices shown are standard online rates. 10x20 ($192) excluded: climate-only.",
-    pricing: {
-      "5x10": 59,
-      "10x10": 49,
-      "10x15": 104,
-      "10x20": null,
-      "10x30": 432
-    }
-  },
-  {
-    name: "Public Storage (FM 1488)",
-    address: "9720 FM 1488 Rd, Magnolia, TX 77354",
-    phone: "(281) 766-4777",
-    distance: "~4.5 mi",
-    distanceMi: 4.5,
-    website: "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
-    rating: 4.8,
-    reviews: 510,
-    amenities: ["Climate Control", "Drive-Up", "Elevator", "Security Cameras", "Gate", "Onsite Manager"],
-    notes: "Non-standard sizes only (5x14, 5x15, 7x14, 10x14, 10x19, 10x30, 10x40, 12x28). $1 first month promo. Admin fee: $29. Closest equivalents shown. 10x20 equiv = 10x19 drive-up ($85).",
-    pricing: {
-      "5x10": 46,
-      "10x10": 90,
-      "10x15": 104,
-      "10x20": 85,
-      "10x30": 41
-    }
-  },
-  {
-    name: "Public Storage (FM 2978)",
-    address: "32010 FM 2978, The Woodlands, TX 77354",
-    phone: "(281) 746-9618",
-    distance: "~6 mi",
-    distanceMi: 6,
-    website: "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
-    rating: 4.8,
-    reviews: 325,
-    amenities: ["Climate Control", "Elevator", "24/7 Kiosk", "Security Cameras", "Gate", "Moving Supplies"],
-    notes: "$1 first month promo. Admin fee: $29. Limited sizes available — no 10x15 or 10x30 listed currently.",
-    pricing: {
-      "5x10": 18,
-      "10x10": 48,
-      "10x15": null,
-      "10x20": 113,
-      "10x30": null
-    }
-  },
-  {
-    name: "SmartStop Self Storage",
-    address: "32620 FM 2978, Magnolia, TX 77354",
-    phone: "(281) 602-8910",
-    distance: "~5 mi",
-    distanceMi: 5,
-    website: "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
-    rating: 4.9,
-    reviews: 140,
-    amenities: ["Climate Control", "Drive-Up", "Video Surveillance", "Admin Fee $29", "Indoor Units"],
-    notes: "Prices NOT published on website — must call (281) 602-8910. Up to 50% off + free 1st month promo. Sizes 5x5 to 10x30. All prices below are estimates from aggregators.",
-    pricing: {
-      "5x10": null,
-      "10x10": null,
-      "10x15": null,
-      "10x20": null,
-      "10x30": null
-    }
-  },
-  {
-    name: "Honea Egypt Self Storage",
-    address: "718 Honea Egypt Rd, Magnolia, TX 77354",
-    phone: "(281) 789-4188",
-    distance: "~5.5 mi",
-    distanceMi: 5.5,
-    website: "https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",
-    rating: 4.6,
-    reviews: 25,
-    amenities: ["Climate Control", "Indoor", "3 Floors", "Security Cameras", "Gate", "Onsite Manager"],
-    notes: "All units climate-controlled interior. 3-story building. No 10x15 or 10x20 currently available. Prices verified from website.",
-    pricing: {
-      "5x10": 82,
-      "10x10": 124,
-      "10x15": null,
-      "10x20": null,
-      "10x30": 450
-    }
-  },
-  {
-    name: "Montgomery Self Storage",
-    address: "33319 Bear Branch Ln, Magnolia, TX 77354",
-    phone: "(281) 259-8106",
-    distance: "~6 mi",
-    distanceMi: 6,
-    website: "https://montgomeryss.com/locations/magnolia-tx/",
-    rating: 4.5,
-    reviews: 32,
-    amenities: ["Climate Control", "Ground Floor", "Drive-Up", "Online Bill Pay", "Price Lock Guarantee"],
-    notes: "Non-climate and climate options. Prices shown are non-climate. Climate: 5x10 $65, 10x10 $135, 10x20 $240. No 10x30 available.",
-    pricing: {
-      "5x10": 55,
-      "10x10": 80,
-      "10x15": 135,
-      "10x20": 145,
-      "10x30": null
-    }
-  },
-  {
-    name: "Woodlands Storage & Office",
-    address: "31711 FM 2978, Magnolia, TX 77354",
-    phone: "(281) 769-7365",
-    distance: "~5.5 mi",
-    distanceMi: 5.5,
-    website: "https://www.woodlandssao.com/units",
-    rating: 5.0,
-    reviews: 48,
-    amenities: ["24/7 Access", "Vehicle Storage", "Security Cameras", "Gate", "Fenced & Lighted", "Unit Alarms", "10% Military Discount"],
-    notes: "Locally owned. 50% off 1st month promo. Only 10x10, 12x10 ($55), and 12x30 ($255) available. No small or mid-size units.",
-    pricing: {
-      "5x10": null,
-      "10x10": 47,
-      "10x15": null,
-      "10x20": null,
-      "10x30": 255
-    }
-  },
-  {
-    name: "Storage King USA",
-    address: "33110 Egypt Ln, Magnolia, TX 77354",
-    phone: "(936) 207-2090",
-    distance: "~7 mi",
-    distanceMi: 7,
-    website: "https://www.storagekingusa.com/locations/texas/magnolia/storage-king-usa-magnolia-tx/",
-    rating: 4.7,
-    reviews: 40,
-    amenities: ["24/7 Access", "Drive-Up", "Covered Parking", "Security Cameras", "Gate", "Onsite Manager", "RV Storage", "Power-Equipped"],
-    notes: "RV/Boat covered parking ONLY — no enclosed storage units. All spaces are open-air covered parking. Prices excluded from comparison (not enclosed).",
-    pricing: {
-      "5x10": null,
-      "10x10": null,
-      "10x15": null,
-      "10x20": null,
-      "10x30": null
-    }
-  }
-];
-
+let competitors = [];
 const unitSizes = ["5x10", "10x10", "10x15", "10x20", "10x30"];
 let selectedUnit = "10x10";
+
+// Fallback data in case data.json can't be loaded
+const FALLBACK_COMPETITORS = [
+  {name:"Lockaway Storage",address:"8215 FM 1488, Magnolia, TX 77354",phone:"(281) 317-8645",distance:"~1 mi",distanceMi:1,website:"https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",rating:4.9,reviews:235,amenities:["Climate Control","Elevator","Online Bill Pay","24/7 Access","Security Cameras","Gate","Drive-Up"],notes:"All units climate-controlled interior. Promos: 40% off 4 months (online), 2 months 50% off (in-store).",pricing:{"5x10":59,"10x10":49,"10x15":104,"10x20":null,"10x30":432}},
+  {name:"Public Storage (FM 1488)",address:"9720 FM 1488 Rd, Magnolia, TX 77354",phone:"(281) 766-4777",distance:"~4.5 mi",distanceMi:4.5,website:"https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",rating:4.8,reviews:510,amenities:["Climate Control","Drive-Up","Elevator","Security Cameras","Gate","Onsite Manager"],notes:"Non-standard sizes. $1 first month promo. Admin fee: $29. Closest equivalents shown.",pricing:{"5x10":46,"10x10":90,"10x15":104,"10x20":85,"10x30":41}},
+  {name:"Public Storage (FM 2978)",address:"32010 FM 2978, The Woodlands, TX 77354",phone:"(281) 746-9618",distance:"~6 mi",distanceMi:6,website:"https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",rating:4.8,reviews:325,amenities:["Climate Control","Elevator","24/7 Kiosk","Security Cameras","Gate","Moving Supplies"],notes:"$1 first month promo. Admin fee: $29. Limited sizes available.",pricing:{"5x10":18,"10x10":48,"10x15":null,"10x20":113,"10x30":null}},
+  {name:"SmartStop Self Storage",address:"32620 FM 2978, Magnolia, TX 77354",phone:"(281) 602-8910",distance:"~5 mi",distanceMi:5,website:"https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",rating:4.9,reviews:140,amenities:["Climate Control","Drive-Up","Video Surveillance","Admin Fee $29","Indoor Units"],notes:"Prices NOT published online — must call (281) 602-8910. Up to 50% off + free 1st month promo.",pricing:{"5x10":null,"10x10":null,"10x15":null,"10x20":null,"10x30":null}},
+  {name:"Honea Egypt Self Storage",address:"718 Honea Egypt Rd, Magnolia, TX 77354",phone:"(281) 789-4188",distance:"~5.5 mi",distanceMi:5.5,website:"https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",rating:4.6,reviews:25,amenities:["Climate Control","Indoor","3 Floors","Security Cameras","Gate","Onsite Manager"],notes:"All units climate-controlled interior. 3-story building.",pricing:{"5x10":82,"10x10":124,"10x15":null,"10x20":null,"10x30":450}},
+  {name:"Montgomery Self Storage",address:"33319 Bear Branch Ln, Magnolia, TX 77354",phone:"(281) 259-8106",distance:"~6 mi",distanceMi:6,website:"https://montgomeryss.com/locations/magnolia-tx/",rating:4.5,reviews:32,amenities:["Climate Control","Ground Floor","Drive-Up","Online Bill Pay","Price Lock Guarantee"],notes:"Non-climate and climate options. Prices shown are non-climate.",pricing:{"5x10":55,"10x10":80,"10x15":135,"10x20":145,"10x30":null}},
+  {name:"Woodlands Storage & Office",address:"31711 FM 2978, Magnolia, TX 77354",phone:"(281) 769-7365",distance:"~5.5 mi",distanceMi:5.5,website:"https://www.woodlandssao.com/units",rating:5.0,reviews:48,amenities:["24/7 Access","Vehicle Storage","Security Cameras","Gate","Fenced & Lighted","Unit Alarms","10% Military Discount"],notes:"Locally owned. 50% off 1st month promo. Limited sizes available.",pricing:{"5x10":null,"10x10":47,"10x15":null,"10x20":null,"10x30":255}},
+  {name:"Storage King USA",address:"33110 Egypt Ln, Magnolia, TX 77354",phone:"(936) 207-2090",distance:"~7 mi",distanceMi:7,website:"https://www.storagekingusa.com/locations/texas/magnolia/storage-king-usa-magnolia-tx/",rating:4.7,reviews:40,amenities:["24/7 Access","Drive-Up","Covered Parking","Security Cameras","Gate","Onsite Manager","RV Storage","Power-Equipped"],notes:"RV/Boat covered parking ONLY — no enclosed storage units.",pricing:{"5x10":null,"10x10":null,"10x15":null,"10x20":null,"10x30":null}}
+];
+
+// Load data from data.json
+async function loadData() {
+  try {
+    const resp = await fetch('data.json?' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    competitors = data.competitors;
+    const ts = data.lastUpdated || 'Unknown';
+    document.getElementById('lastUpdated').innerHTML = 'Prices auto-updated daily &middot; Last scan: ' + ts + ' <span class="loading-badge">Live</span>';
+  } catch (e) {
+    console.log('Could not load data.json, using fallback data:', e.message);
+    competitors = FALLBACK_COMPETITORS;
+    document.getElementById('lastUpdated').textContent = 'Using cached data (data.json unavailable)';
+  }
+  refreshAll();
+}
 
 function getMyPricing() {
   const p = {};
@@ -513,20 +400,17 @@ function renderSummary() {
   const my = getMyPricing();
   const grid = document.getElementById('summaryGrid');
 
-  // Count competitors with pricing for comparison
-  let cheaper = 0, pricier = 0, totalDiff = 0, compared = 0;
+  let cheaper = 0, pricier = 0, compared = 0;
   competitors.forEach(c => {
     unitSizes.forEach(s => {
       if (c.pricing[s] !== null && my[s] > 0) {
         compared++;
         if (c.pricing[s] < my[s]) cheaper++;
         else if (c.pricing[s] > my[s]) pricier++;
-        totalDiff += (my[s] - c.pricing[s]);
       }
     });
   });
 
-  // Market avg for selected unit
   let prices = competitors.map(c => c.pricing[selectedUnit]).filter(p => p !== null);
   let avg = prices.length ? (prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
   let myPrice = my[selectedUnit];
@@ -662,8 +546,8 @@ function refreshAll() {
   renderDetails();
 }
 
-// Init
-refreshAll();
+// Init — load live data from data.json
+loadData();
 </script>
 
 </body>
