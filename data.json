@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-27 15:05 UTC",
+  "lastUpdated": "2026-02-28 13:56 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -21,7 +21,7 @@
       ],
       "notes": "All units climate-controlled interior. Promos: 40% off 4 months (online), 2 months 50% off (in-store).",
       "pricing": {
-        "5x10": 29,
+        "5x10": null,
         "10x10": null,
         "10x15": null,
         "10x20": null,
@@ -47,8 +47,8 @@
       ],
       "notes": "Non-standard sizes. $1 first month promo. Admin fee: $29. Closest equivalents shown.",
       "pricing": {
-        "5x10": 21,
-        "10x10": 44,
+        "5x10": 18,
+        "10x10": 42,
         "10x15": 121,
         "10x20": 85,
         "10x30": 41
@@ -128,7 +128,7 @@
         "10x10": 124,
         "10x15": null,
         "10x20": null,
-        "10x30": null
+        "10x30": 450
       }
     },
     {
