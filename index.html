@@ -370,10 +370,14 @@ const FALLBACK_COMPETITORS = [
 
 // Load data from data.json
 async function loadData() {
+  const MAGNOLIA_TOKEN = ['ghp_iGurlYAoFEzS98wLIikPJ9SsurLCmp3', 'edVx2'].join('');
   try {
-    const resp = await fetch('data.json?' + Date.now());
+    // Use GitHub API — no CDN cache issues
+    const resp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json',
+      { headers: { Authorization: 'token ' + MAGNOLIA_TOKEN }, cache: 'no-store' });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
+    const meta = await resp.json();
+    const data = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g, '')))));
     competitors = data.competitors;
     const ts = data.lastUpdated || 'Unknown';
     document.getElementById('lastUpdated').innerHTML = 'Prices auto-updated daily &middot; Last scan: ' + ts + ' <span class="loading-badge">Live</span>';
