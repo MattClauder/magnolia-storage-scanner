@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-17 16:44 UTC",
+  "lastUpdated": "2026-03-18 16:41 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -47,10 +47,10 @@
       ],
       "notes": "Non-standard sizes. $1 first month promo. Admin fee: $29. Closest equivalents shown.",
       "pricing": {
-        "5x10": 42,
-        "10x10": 56,
+        "5x10": 46,
+        "10x10": 61,
         "10x15": null,
-        "10x20": 83,
+        "10x20": 95,
         "10x30": 62
       }
     },
@@ -73,10 +73,10 @@
       ],
       "notes": "$1 first month promo. Admin fee: $29. Limited sizes available.",
       "pricing": {
-        "5x10": 17,
-        "10x10": 53,
-        "10x15": 78,
-        "10x20": 136,
+        "5x10": 16,
+        "10x10": 51,
+        "10x15": 79,
+        "10x20": 128,
         "10x30": null
       }
     },
