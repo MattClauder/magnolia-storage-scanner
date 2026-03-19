@@ -317,8 +317,24 @@
       </div>
     </div>
   </div>
-
-  <!-- Summary -->
+  <script>
+    // Load saved pricing IMMEDIATELY to prevent flash of default values
+    (function() {
+      try {
+        var saved = localStorage.getItem('magnolia_my_pricing');
+        if (saved) {
+          var p = JSON.parse(saved);
+          var sizes = ["5x10", "10x10", "10x15", "10x20", "10x30"];
+          sizes.forEach(function(s) {
+            if (p[s] !== undefined && p[s] !== null) {
+              var el = document.getElementById('my-' + s);
+              if (el) el.value = p[s];
+            }
+          });
+        }
+      } catch (e) {}
+    })();
+  </script>
   <div class="summary-grid" id="summaryGrid"></div>
 
   <!-- Tabs -->
