@@ -297,23 +297,23 @@
     <div class="price-inputs">
       <div class="price-input-group">
         <label>5x10</label>
-        <input type="number" id="my-5x10" value="25" min="0" step="1" onchange="refreshAll()">
+        <input type="number" id="my-5x10" value="25" min="0" step="1" onchange="saveMyPricing(); refreshAll()" oninput="saveMyPricing(); refreshAll()">
       </div>
       <div class="price-input-group">
         <label>10x10</label>
-        <input type="number" id="my-10x10" value="87" min="0" step="1" onchange="refreshAll()">
+        <input type="number" id="my-10x10" value="87" min="0" step="1" onchange="saveMyPricing(); refreshAll()" oninput="saveMyPricing(); refreshAll()">
       </div>
       <div class="price-input-group">
         <label>10x15</label>
-        <input type="number" id="my-10x15" value="115" min="0" step="1" onchange="refreshAll()">
+        <input type="number" id="my-10x15" value="115" min="0" step="1" onchange="saveMyPricing(); refreshAll()" oninput="saveMyPricing(); refreshAll()">
       </div>
       <div class="price-input-group">
         <label>10x20</label>
-        <input type="number" id="my-10x20" value="165" min="0" step="1" onchange="refreshAll()">
+        <input type="number" id="my-10x20" value="165" min="0" step="1" onchange="saveMyPricing(); refreshAll()" oninput="saveMyPricing(); refreshAll()">
       </div>
       <div class="price-input-group">
         <label>10x30</label>
-        <input type="number" id="my-10x30" value="280" min="0" step="1" onchange="refreshAll()">
+        <input type="number" id="my-10x30" value="280" min="0" step="1" onchange="saveMyPricing(); refreshAll()" oninput="saveMyPricing(); refreshAll()">
       </div>
     </div>
   </div>
@@ -386,6 +386,7 @@ async function loadData() {
     competitors = FALLBACK_COMPETITORS;
     document.getElementById('lastUpdated').textContent = 'Using cached data (data.json unavailable)';
   }
+  loadMyPricing();
   refreshAll();
 }
 
@@ -396,6 +397,27 @@ function getMyPricing() {
     p[s] = isNaN(v) ? 0 : v;
   });
   return p;
+}
+
+function saveMyPricing() {
+  const p = getMyPricing();
+  localStorage.setItem('magnolia_my_pricing', JSON.stringify(p));
+}
+
+function loadMyPricing() {
+  try {
+    const saved = localStorage.getItem('magnolia_my_pricing');
+    if (saved) {
+      const p = JSON.parse(saved);
+      unitSizes.forEach(s => {
+        if (p[s] !== undefined && p[s] !== null) {
+          document.getElementById('my-' + s).value = p[s];
+        }
+      });
+    }
+  } catch (e) {
+    console.log('Could not load saved pricing:', e.message);
+  }
 }
 
 // ============================================
