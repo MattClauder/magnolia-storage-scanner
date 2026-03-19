@@ -202,7 +202,7 @@
         "RV Storage",
         "Power-Equipped"
       ],
-      "notes": "RV/Boat covered parking ONLY \u2014 no enclosed storage units.",
+      "notes": "RV/Boat covered parking ONLY — no enclosed storage units.",
       "pricing": {
         "5x10": null,
         "10x10": null,
@@ -214,7 +214,7 @@
   ],
   "myPricing": {
     "5x10": 25,
-    "10x10": 87,
+    "10x10": 50,
     "10x15": 115,
     "10x20": 165,
     "10x30": 280
