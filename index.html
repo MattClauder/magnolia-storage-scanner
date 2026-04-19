@@ -368,21 +368,19 @@ const FALLBACK_COMPETITORS = [
 ];
 
 // Load data from data.json
-let dataSha = null; // Track SHA for GitHub API updates
 let fullData = null; // Keep full data.json in memory for updates
 const MAGNOLIA_TOKEN = ['ghp_iGurlYAoFEzS98wLIikPJ9SsurLCmp3', 'edVx2'].join('');
 
 async function loadData() {
   try {
-    // Use GitHub API — no CDN cache issues
-    const resp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json',
-      { headers: { Authorization: 'token ' + MAGNOLIA_TOKEN }, cache: 'no-store' });
+    // Load data.json directly from GitHub Pages — public, no auth needed.
+    // This guarantees reads work even if the API token is expired.
+    // Cache-busted with a timestamp so CDN never serves stale data.
+    const resp = await fetch('data.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const meta = await resp.json();
-    dataSha = meta.sha;
-    fullData = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g, '')))));
+    fullData = await resp.json();
     competitors = fullData.competitors;
-    
+
     // Load myPricing from data.json
     if (fullData.myPricing) {
       unitSizes.forEach(s => {
@@ -392,7 +390,7 @@ async function loadData() {
         }
       });
     }
-    
+
     const ts = fullData.lastUpdated || 'Unknown';
     document.getElementById('lastUpdated').innerHTML = 'Prices auto-updated daily &middot; Last scan: ' + ts + ' <span class="loading-badge">Live</span>';
   } catch (e) {
@@ -427,7 +425,17 @@ function saveMyPricingToGitHub() {
   statusEl.style.color = 'var(--gray-500)';
   saveTimeout = setTimeout(async () => {
     try {
-      if (!fullData || !dataSha) throw new Error('Data not loaded');
+      if (!fullData) throw new Error('Data not loaded');
+
+      // Fetch current SHA on demand (token only needed for save, not read)
+      const metaResp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json', {
+        headers: { Authorization: 'token ' + MAGNOLIA_TOKEN },
+        cache: 'no-store'
+      });
+      if (!metaResp.ok) throw new Error('SHA fetch HTTP ' + metaResp.status);
+      const meta = await metaResp.json();
+      const currentSha = meta.sha;
+
       fullData.myPricing = getMyPricing();
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(fullData, null, 2))));
       const resp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json', {
@@ -436,18 +444,16 @@ function saveMyPricingToGitHub() {
         body: JSON.stringify({
           message: 'Update my pricing',
           content: content,
-          sha: dataSha
+          sha: currentSha
         })
       });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const result = await resp.json();
-      dataSha = result.content.sha; // Update SHA for next save
       statusEl.textContent = '✓ Saved';
       statusEl.style.color = 'var(--green)';
       setTimeout(() => { statusEl.textContent = ''; }, 2000);
     } catch (e) {
       console.error('Failed to save pricing:', e);
-      statusEl.textContent = '⚠ Save failed — try again';
+      statusEl.textContent = '⚠ Save failed — check token';
       statusEl.style.color = 'var(--accent)';
     }
   }, 1500);
