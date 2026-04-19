@@ -4,7 +4,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Magnolia Storage — Competitor Pricing Scanner</title>
+<title>Magnolia Storage â Competitor Pricing Scanner</title>
 <style>
   :root {
     --primary: #1a365d;
@@ -316,7 +316,10 @@
         <input type="number" id="my-10x30" value="" min="0" step="1" onchange="saveMyPricingToGitHub()" oninput="refreshAll()">
       </div>
     </div>
-    <div id="saveStatus" style="font-size:12px;margin-top:8px;color:var(--gray-500);min-height:18px;"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+      <div id="saveStatus" style="font-size:12px;color:var(--gray-500);min-height:18px;flex:1;"></div>
+      <button type="button" onclick="resetToken()" style="font-size:11px;background:none;border:1px solid var(--gray-300);color:var(--gray-500);padding:3px 8px;border-radius:4px;cursor:pointer;">Reset token</button>
+    </div>
   </div>
   <div class="summary-grid" id="summaryGrid"></div>
 
@@ -341,7 +344,7 @@
   </div>
 
   <div class="notes">
-    <strong>Data Notes:</strong> Competitor pricing is auto-updated daily by scanning each facility's website. Some facilities use dynamic/promotional pricing that changes frequently. Prices marked "N/A" mean that unit size isn't offered or pricing couldn't be confirmed. Public Storage uses non-standard unit sizes — closest equivalents are shown. Storage King USA is covered parking only (not enclosed units). Distances are approximate.
+    <strong>Data Notes:</strong> Competitor pricing is auto-updated daily by scanning each facility's website. Some facilities use dynamic/promotional pricing that changes frequently. Prices marked "N/A" mean that unit size isn't offered or pricing couldn't be confirmed. Public Storage uses non-standard unit sizes â closest equivalents are shown. Storage King USA is covered parking only (not enclosed units). Distances are approximate.
   </div>
 
   <div class="last-updated" id="lastUpdated">Loading pricing data...</div>
@@ -349,7 +352,7 @@
 
 <script>
 // ============================================
-// DATA — Loaded from data.json (auto-updated daily)
+// DATA â Loaded from data.json (auto-updated daily)
 // ============================================
 let competitors = [];
 const unitSizes = ["5x10", "10x10", "10x15", "10x20", "10x30"];
@@ -360,20 +363,44 @@ const FALLBACK_COMPETITORS = [
   {name:"Lockaway Storage",address:"8215 FM 1488, Magnolia, TX 77354",phone:"(281) 317-8645",distance:"~1 mi",distanceMi:1,website:"https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",rating:4.9,reviews:235,amenities:["Climate Control","Elevator","Online Bill Pay","24/7 Access","Security Cameras","Gate","Drive-Up"],notes:"All units climate-controlled interior. Promos: 40% off 4 months (online), 2 months 50% off (in-store).",pricing:{"5x10":59,"10x10":49,"10x15":104,"10x20":null,"10x30":432}},
   {name:"Public Storage (FM 1488)",address:"9720 FM 1488 Rd, Magnolia, TX 77354",phone:"(281) 766-4777",distance:"~4.5 mi",distanceMi:4.5,website:"https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",rating:4.8,reviews:510,amenities:["Climate Control","Drive-Up","Elevator","Security Cameras","Gate","Onsite Manager"],notes:"Non-standard sizes. $1 first month promo. Admin fee: $29. Closest equivalents shown.",pricing:{"5x10":46,"10x10":90,"10x15":104,"10x20":85,"10x30":41}},
   {name:"Public Storage (FM 2978)",address:"32010 FM 2978, The Woodlands, TX 77354",phone:"(281) 746-9618",distance:"~6 mi",distanceMi:6,website:"https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",rating:4.8,reviews:325,amenities:["Climate Control","Elevator","24/7 Kiosk","Security Cameras","Gate","Moving Supplies"],notes:"$1 first month promo. Admin fee: $29. Limited sizes available.",pricing:{"5x10":18,"10x10":48,"10x15":null,"10x20":113,"10x30":null}},
-  {name:"SmartStop Self Storage",address:"32620 FM 2978, Magnolia, TX 77354",phone:"(281) 602-8910",distance:"~5 mi",distanceMi:5,website:"https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",rating:4.9,reviews:140,amenities:["Climate Control","Drive-Up","Video Surveillance","Admin Fee $29","Indoor Units"],notes:"Prices NOT published online — must call (281) 602-8910. Up to 50% off + free 1st month promo.",pricing:{"5x10":null,"10x10":null,"10x15":null,"10x20":null,"10x30":null}},
+  {name:"SmartStop Self Storage",address:"32620 FM 2978, Magnolia, TX 77354",phone:"(281) 602-8910",distance:"~5 mi",distanceMi:5,website:"https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",rating:4.9,reviews:140,amenities:["Climate Control","Drive-Up","Video Surveillance","Admin Fee $29","Indoor Units"],notes:"Prices NOT published online â must call (281) 602-8910. Up to 50% off + free 1st month promo.",pricing:{"5x10":null,"10x10":null,"10x15":null,"10x20":null,"10x30":null}},
   {name:"Honea Egypt Self Storage",address:"718 Honea Egypt Rd, Magnolia, TX 77354",phone:"(281) 789-4188",distance:"~5.5 mi",distanceMi:5.5,website:"https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",rating:4.6,reviews:25,amenities:["Climate Control","Indoor","3 Floors","Security Cameras","Gate","Onsite Manager"],notes:"All units climate-controlled interior. 3-story building.",pricing:{"5x10":82,"10x10":124,"10x15":null,"10x20":null,"10x30":450}},
   {name:"Montgomery Self Storage",address:"33319 Bear Branch Ln, Magnolia, TX 77354",phone:"(281) 259-8106",distance:"~6 mi",distanceMi:6,website:"https://montgomeryss.com/locations/magnolia-tx/",rating:4.5,reviews:32,amenities:["Climate Control","Ground Floor","Drive-Up","Online Bill Pay","Price Lock Guarantee"],notes:"Non-climate and climate options. Prices shown are non-climate.",pricing:{"5x10":55,"10x10":80,"10x15":135,"10x20":145,"10x30":null}},
   {name:"Woodlands Storage & Office",address:"31711 FM 2978, Magnolia, TX 77354",phone:"(281) 769-7365",distance:"~5.5 mi",distanceMi:5.5,website:"https://www.woodlandssao.com/units",rating:5.0,reviews:48,amenities:["24/7 Access","Vehicle Storage","Security Cameras","Gate","Fenced & Lighted","Unit Alarms","10% Military Discount"],notes:"Locally owned. 50% off 1st month promo. Limited sizes available.",pricing:{"5x10":null,"10x10":47,"10x15":null,"10x20":null,"10x30":255}},
-  {name:"Storage King USA",address:"33110 Egypt Ln, Magnolia, TX 77354",phone:"(936) 207-2090",distance:"~7 mi",distanceMi:7,website:"https://www.storagekingusa.com/locations/texas/magnolia/storage-king-usa-magnolia-tx/",rating:4.7,reviews:40,amenities:["24/7 Access","Drive-Up","Covered Parking","Security Cameras","Gate","Onsite Manager","RV Storage","Power-Equipped"],notes:"RV/Boat covered parking ONLY — no enclosed storage units.",pricing:{"5x10":null,"10x10":null,"10x15":null,"10x20":null,"10x30":null}}
+  {name:"Storage King USA",address:"33110 Egypt Ln, Magnolia, TX 77354",phone:"(936) 207-2090",distance:"~7 mi",distanceMi:7,website:"https://www.storagekingusa.com/locations/texas/magnolia/storage-king-usa-magnolia-tx/",rating:4.7,reviews:40,amenities:["24/7 Access","Drive-Up","Covered Parking","Security Cameras","Gate","Onsite Manager","RV Storage","Power-Equipped"],notes:"RV/Boat covered parking ONLY â no enclosed storage units.",pricing:{"5x10":null,"10x10":null,"10x15":null,"10x20":null,"10x30":null}}
 ];
 
 // Load data from data.json
 let fullData = null; // Keep full data.json in memory for updates
-const MAGNOLIA_TOKEN = ['ghp_iGurlYAoFEzS98wLIikPJ9SsurLCmp3', 'edVx2'].join('');
+
+// GitHub token â stored only in this browser's localStorage. Prompted on first save.
+const TOKEN_KEY = 'magnolia_gh_token';
+function getToken(forcePrompt) {
+  let t = forcePrompt ? null : localStorage.getItem(TOKEN_KEY);
+  if (!t) {
+    t = prompt('Enter a GitHub Personal Access Token with Contents: Read/Write on MattClauder/magnolia-storage-scanner.\n\nThe token is saved only in this browser (localStorage). Click Reset token under the pricing editor to rotate it later.');
+    if (t) {
+      t = t.trim();
+      localStorage.setItem(TOKEN_KEY, t);
+    }
+  }
+  return t;
+}
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+function resetToken() {
+  clearToken();
+  const t = getToken(true);
+  const statusEl = document.getElementById('saveStatus');
+  if (statusEl) {
+    statusEl.textContent = t ? 'â Token saved' : 'â  No token set';
+    statusEl.style.color = t ? 'var(--green)' : 'var(--accent)';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  }
+}
 
 async function loadData() {
   try {
-    // Load data.json directly from GitHub Pages — public, no auth needed.
+    // Load data.json directly from GitHub Pages â public, no auth needed.
     // This guarantees reads work even if the API token is expired.
     // Cache-busted with a timestamp so CDN never serves stale data.
     const resp = await fetch('data.json?t=' + Date.now(), { cache: 'no-store' });
@@ -418,7 +445,7 @@ function getMyPricing() {
 let saveTimeout = null;
 function saveMyPricingToGitHub() {
   refreshAll();
-  // Debounce — wait 1.5s after last edit before committing
+  // Debounce â wait 1.5s after last edit before committing
   clearTimeout(saveTimeout);
   const statusEl = document.getElementById('saveStatus');
   statusEl.textContent = 'Saving...';
@@ -426,12 +453,27 @@ function saveMyPricingToGitHub() {
   saveTimeout = setTimeout(async () => {
     try {
       if (!fullData) throw new Error('Data not loaded');
+      let token = getToken();
+      if (!token) {
+        statusEl.textContent = 'â  Save canceled â no token';
+        statusEl.style.color = 'var(--accent)';
+        return;
+      }
 
       // Fetch current SHA on demand (token only needed for save, not read)
-      const metaResp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json', {
-        headers: { Authorization: 'token ' + MAGNOLIA_TOKEN },
+      let metaResp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json', {
+        headers: { Authorization: 'token ' + token },
         cache: 'no-store'
       });
+      if (metaResp.status === 401) {
+        clearToken();
+        token = getToken();
+        if (!token) { statusEl.textContent = 'â  Save canceled â no token'; statusEl.style.color = 'var(--accent)'; return; }
+        metaResp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json', {
+          headers: { Authorization: 'token ' + token },
+          cache: 'no-store'
+        });
+      }
       if (!metaResp.ok) throw new Error('SHA fetch HTTP ' + metaResp.status);
       const meta = await metaResp.json();
       const currentSha = meta.sha;
@@ -440,20 +482,26 @@ function saveMyPricingToGitHub() {
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(fullData, null, 2))));
       const resp = await fetch('https://api.github.com/repos/MattClauder/magnolia-storage-scanner/contents/data.json', {
         method: 'PUT',
-        headers: { Authorization: 'token ' + MAGNOLIA_TOKEN, 'Content-Type': 'application/json' },
+        headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: 'Update my pricing',
           content: content,
           sha: currentSha
         })
       });
+      if (resp.status === 401) {
+        clearToken();
+        statusEl.textContent = 'â  Token rejected â click Reset token';
+        statusEl.style.color = 'var(--accent)';
+        return;
+      }
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      statusEl.textContent = '✓ Saved';
+      statusEl.textContent = 'â Saved';
       statusEl.style.color = 'var(--green)';
       setTimeout(() => { statusEl.textContent = ''; }, 2000);
     } catch (e) {
       console.error('Failed to save pricing:', e);
-      statusEl.textContent = '⚠ Save failed — check token';
+      statusEl.textContent = 'â  Save failed â check token';
       statusEl.style.color = 'var(--accent)';
     }
   }, 1500);
@@ -514,7 +562,7 @@ function renderChart() {
   const my = getMyPricing();
   const chart = document.getElementById('barChart');
   const title = document.getElementById('chartTitle');
-  title.textContent = `${selectedUnit} Unit — Price Comparison`;
+  title.textContent = `${selectedUnit} Unit â Price Comparison`;
 
   let entries = [{name: "Magnolia Storage (You)", price: my[selectedUnit], yours: true}];
   competitors.forEach(c => {
@@ -612,7 +660,7 @@ function refreshAll() {
   renderDetails();
 }
 
-// Init — load live data from data.json
+// Init â load live data from data.json
 loadData();
 </script>
 
