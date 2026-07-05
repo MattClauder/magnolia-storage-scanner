@@ -119,17 +119,21 @@ def scrape_lockaway(url):
         "10x30": "10x30", "12x30": "10x30",
     }
     size_prices = {}
+    size_full = {}
     for key, card, prefix in segment_cards(html):
         mapped = lockaway_map.get(key)
         if not mapped:
             continue
         prices = card_prices(card)
         if prices:
-            keep_lowest(size_prices, mapped, prices[0])  # lowest advertised in card
+            promo, regular = prices[0], prices[-1]
+            if mapped not in size_prices or promo < size_prices[mapped]:
+                size_prices[mapped] = promo
+                size_full[mapped] = {"regular": regular, "promo": promo}
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
-    return pricing, "ok"
+    return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
 def scrape_public_storage(url, facility_name):
@@ -152,6 +156,7 @@ def scrape_public_storage(url, facility_name):
         "10x30": "10x30",
     }
     size_prices = {}
+    size_full = {}
     for key, card, prefix in segment_cards(html):
         mapped = ps_map.get(key)
         if not mapped:
@@ -163,16 +168,22 @@ def scrape_public_storage(url, facility_name):
             continue
         if PARKING_RE.search(card):
             continue  # "Uncovered" = a parking space, not an enclosed unit
-        # Prefer the online-only rate; fall back to the in-store rate.
-        m = re.search(r"Online[\s-]*(?:Only)?\s*[Pp]rice\s*\$\s*(\d+(?:\.\d{1,2})?)", card)
-        if not m:
-            m = re.search(r"In\s*Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
-        if m:
-            keep_lowest(size_prices, mapped, round(float(m.group(1))))
+        # Capture both figures: online-only (promo) and in-store (regular).
+        mo = re.search(r"Online[\s-]*(?:Only)?\s*[Pp]rice\s*\$\s*(\d+(?:\.\d{1,2})?)", card)
+        mi = re.search(r"In\s*Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
+        eff = mo or mi
+        if eff:
+            val = round(float(eff.group(1)))
+            if mapped not in size_prices or val < size_prices[mapped]:
+                size_prices[mapped] = val
+                size_full[mapped] = {
+                    "regular": round(float(mi.group(1))) if mi else val,
+                    "promo": round(float(mo.group(1))) if mo else None,
+                }
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
-    return pricing, "ok"
+    return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
 def scrape_smartstop(url):
@@ -197,7 +208,7 @@ def scrape_smartstop(url):
 
     pricing = empty_pricing()
     pricing.update(size_prices)
-    return pricing, "ok"
+    return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
 
 
 def scrape_honea_egypt(url):
@@ -218,7 +229,7 @@ def scrape_honea_egypt(url):
 
     pricing = empty_pricing()
     pricing.update(size_prices)
-    return pricing, "ok"
+    return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
 
 
 def scrape_montgomery(url):
@@ -239,7 +250,7 @@ def scrape_montgomery(url):
 
     pricing = empty_pricing()
     pricing.update(size_prices)
-    return pricing, "ok"
+    return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
 
 
 def scrape_woodlands_sao(url):
@@ -260,6 +271,7 @@ def scrape_woodlands_sao(url):
         "10x30": "10x30", "12x30": "10x30",
     }
     size_prices = {}
+    size_full = {}
     for key, card, prefix in segment_cards(html):
         mapped = woodlands_map.get(key)
         if not mapped:
@@ -267,11 +279,14 @@ def scrape_woodlands_sao(url):
         prices = card_prices(card)
         if prices:
             regular = prices[-1]  # highest in this card = regular price
-            keep_lowest(size_prices, mapped, regular)
+            promo = prices[0] if len(prices) > 1 else None
+            if mapped not in size_prices or regular < size_prices[mapped]:
+                size_prices[mapped] = regular
+                size_full[mapped] = {"regular": regular, "promo": promo}
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
-    return pricing, "ok"
+    return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
 # --- Main --------------------------------------------------------------------
@@ -331,7 +346,9 @@ def main():
             continue
 
         print(f"\nSCAN {name}...")
-        new_pricing, status = target["scraper"](target["url"])
+        result, status = target["scraper"](target["url"])
+        new_pricing = result["pricing"] if result else None
+        new_full = result.get("pricingFull", {}) if result else {}
 
         if status != "ok" or new_pricing is None:
             # Keep old numbers but be HONEST about it: status recorded,
@@ -352,6 +369,7 @@ def main():
                 changes.append(f"  {name} {s}: ${old_pricing.get(s)} -> ${new_pricing.get(s)}")
 
         entry["pricing"] = new_pricing
+        entry["pricingFull"] = new_full
         entry["scrapeStatus"] = "ok"
         entry["lastVerified"] = now_utc()
         found = sum(1 for v in new_pricing.values() if v is not None)
