@@ -604,9 +604,16 @@ function renderDetails() {
   const container = document.getElementById('detailCards');
   let html = '';
   competitors.forEach(c => {
-    let pricingHtml = unitSizes.map(s =>
-      `<span style="margin-right:14px;"><strong>${s}:</strong> ${c.pricing[s] !== null ? '$'+c.pricing[s] : '<span style="color:var(--gray-500)">N/A</span>'}</span>`
-    ).join('');
+    let pricingHtml = unitSizes.map(s => {
+      const eff = c.pricing[s];
+      const f = (c.pricingFull || {})[s];
+      if (eff === null || eff === undefined) return `<span style="margin-right:14px;"><strong>${s}:</strong> <span style="color:var(--gray-500)">N/A</span></span>`;
+      if (f && f.promo !== null && f.promo !== undefined && f.regular !== null && f.regular !== f.promo) {
+        return `<span style="margin-right:14px;"><strong>${s}:</strong> <span style="color:#15803d;font-weight:600;">${f.promo}</span> <span style="color:var(--gray-400);text-decoration:line-through;">${f.regular}</span></span>`;
+      }
+      return `<span style="margin-right:14px;"><strong>${s}:</strong> ${eff}</span>`;
+    }).join('');
+    const promoLine = c.promoNote ? `<div style="font-size:12px;color:#15803d;margin-bottom:6px;">&#127991; ${c.promoNote}</div>` : '';
 
     html += `
       <div class="card">
@@ -617,6 +624,7 @@ function renderDetails() {
           ${c.rating ? ' &nbsp;|&nbsp; ' + c.rating + ' &#9733; (' + c.reviews + ' reviews)' : ''}
         </div>
         <div style="margin-bottom:8px; font-size:13px;">${pricingHtml}</div>
+        ${promoLine}
         <div style="font-size:12px; color:var(--gray-500); margin-bottom:6px;">
           <strong>Amenities:</strong> ${c.amenities.join(', ')}
         </div>
