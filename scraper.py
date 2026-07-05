@@ -1,8 +1,21 @@
 #!/usr/bin/env python3
 """
-Magnolia Storage - Competitor Price Scraper
+Magnolia Storage - Competitor Price Scraper (v2)
 Runs daily via GitHub Actions to update data.json with current competitor pricing.
 Uses only Python stdlib (no pip dependencies needed).
+
+v2 fixes (July 2026 audit):
+1. CARD SEGMENTATION: prices are matched only within their own unit card
+   (text between one dimension and the next), never across card boundaries.
+   The old fixed-width regex windows let a size grab its neighbor's price.
+2. PARKING FILTER: Public Storage listings for uncovered RV/boat/vehicle
+   parking are excluded. Previously a 10x30 uncovered parking space ($52)
+   was recorded as an enclosed 10x30 unit.
+3. MAPPING FIXES: PS 8x14 now maps to 10x10 equivalent.
+4. HONEST FRESHNESS: each competitor now carries scrapeStatus
+   ("ok" | "blocked" | "failed") and lastVerified (only updated on a
+   successful scrape). A daily run that gets blocked no longer masquerades
+   as fresh data. The dashboard reads these fields to show stale badges.
 """
 
 import json
@@ -12,11 +25,21 @@ import sys
 from datetime import datetime, timezone
 from urllib.request import urlopen, Request
 
+SIZES = ["5x10", "10x10", "10x15", "10x20", "10x30"]
+
+# Text that marks a listing as vehicle parking, not an enclosed unit.
+# "Uncovered" marks true parking spaces. Enclosed drive-up units that allow
+# vehicle parking inside are legitimate units and must NOT be excluded.
+PARKING_RE = re.compile(r"uncovered|parking\s*space\s*only", re.I)
 
 # --- Helpers -----------------------------------------------------------------
 
+def now_utc():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
 def fetch(url, timeout=30):
-    """Fetch a URL and return the HTML as a string."""
+    """Fetch a URL and return the HTML as a string, or None on failure."""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                        "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
@@ -30,311 +53,235 @@ def fetch(url, timeout=30):
         return None
 
 
-def normalize_size(w, h):
-    """Normalize a WxH pair so the smaller dimension comes first."""
-    w, h = int(w), int(h)
-    return (min(w, h), max(w, h))
+def strip_tags(html):
+    """Crude HTML-to-text so card segmentation follows what a human sees."""
+    text = re.sub(r"<script[\s\S]*?</script>", " ", html, flags=re.I)
+    text = re.sub(r"<style[\s\S]*?</style>", " ", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"&nbsp;|&#160;", " ", text)
+    text = re.sub(r"&#0?39;|&apos;|&rsquo;", "'", text)
+    text = re.sub(r"&amp;", "&", text)
+    return re.sub(r"\s+", " ", text)
 
 
-def size_key(w, h):
-    """Create a standard size key like '5x10' from two dimensions."""
-    nw, nh = normalize_size(w, h)
-    return f"{nw}x{nh}"
+DIM_RE = re.compile(r"(\d{1,2})\s*'?\s*[xX\u00d7]\s*(\d{1,2})\s*'?")
+
+
+def segment_cards(html):
+    """
+    Split page text into per-unit 'cards'. Each card runs from one dimension
+    occurrence to the next, so prices can never bleed between cards.
+    Returns a list of (norm_size_key, card_text, prefix_text).
+    """
+    text = strip_tags(html)
+    hits = [(m.start(), int(m.group(1)), int(m.group(2))) for m in DIM_RE.finditer(text)]
+    cards = []
+    for i, (pos, a, b) in enumerate(hits):
+        end = hits[i + 1][0] if i + 1 < len(hits) else min(len(text), pos + 400)
+        prev_end = hits[i - 1][0] if i > 0 else 0
+        prefix = text[max(prev_end, pos - 200):pos]
+        lo, hi = sorted((a, b))
+        cards.append((f"{lo}x{hi}", text[pos:end], prefix))
+    return cards
+
+
+def card_prices(card_text):
+    """All whole-dollar prices in a card, low to high."""
+    vals = [round(float(p)) for p in re.findall(r"\$\s*(\d+(?:\.\d{1,2})?)", card_text)]
+    return sorted(v for v in vals if v > 1)  # ignore the $1 promo figure
+
+
+def empty_pricing():
+    return {s: None for s in SIZES}
+
+
+def keep_lowest(size_prices, key, val):
+    if key not in size_prices or val < size_prices[key]:
+        size_prices[key] = val
 
 
 # --- Scrapers ----------------------------------------------------------------
+# Each scraper returns (pricing_dict, status) where status is "ok"|"blocked"|"failed".
 
 def scrape_lockaway(url):
-    """
-    Lockaway Storage - Magnolia, TX
-    Prices shown as "STARTING AT $XX" near unit dimension text like "5' x 10'".
-    We look for 'STARTING' or 'IN-STORE' markers near dimensions and prices.
-    The key fix: limit search distance between dimension and price to avoid
-    matching across different unit cards.
-    """
+    """Lockaway: multiple cards per size; use lowest advertised (online/starting)."""
     html = fetch(url)
-    if not html:
-        return None
+    if html is None:
+        return None, "failed"
+    if "$" not in html:
+        return None, "blocked"
 
-    pricing = {"5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None}
-
-    # Match dimension blocks: "5' x 10'" ... "$44" within a limited window (500 chars)
-    # This prevents matching a dimension in one card with a price in a different card.
-    blocks = re.findall(
-        r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,500}?)(?:STARTING\s+AT|PROMO\s+RATE|ONLINE)\s*(?:<[^>]*>)*\s*\$(\d+(?:\.\d{2})?)',
-        html, re.IGNORECASE | re.DOTALL
-    )
-
-    if not blocks:
-        # Fallback: simpler pattern with tight window
-        blocks = re.findall(
-            r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,300}?)\$(\d+(?:\.\d{2})?)',
-            html, re.IGNORECASE | re.DOTALL
-        )
-
-    # Map Lockaway non-standard sizes to our targets
     lockaway_map = {
-        "5x10": "5x10",
-        "8x10": "5x10",  # ~same sqft
+        "5x10": "5x10", "8x10": "5x10",
         "10x10": "10x10",
-        "10x15": "10x15",
-        "15x10": "10x15",  # reversed
-        "8x15": "10x15",   # close
-        "10x20": "10x20",
-        "8x20": "10x20",   # close
-        "10x30": "10x30",
-        "12x30": "10x30",  # close
+        "10x15": "10x15", "8x15": "10x15",
+        "10x20": "10x20", "8x20": "10x20",
+        "10x30": "10x30", "12x30": "10x30",
     }
-
     size_prices = {}
-    for w, d, price in blocks:
-        raw_key = size_key(w, d)
-        mapped = lockaway_map.get(raw_key)
+    for key, card, prefix in segment_cards(html):
+        mapped = lockaway_map.get(key)
         if not mapped:
-            # Try with original order too
-            mapped = lockaway_map.get(f"{w}x{d}")
-        if mapped:
-            price_val = float(price)
-            # Use the ONLINE/STARTING price (not in-store) - keep lowest online price
-            if mapped not in size_prices or price_val < size_prices[mapped]:
-                size_prices[mapped] = price_val
+            continue
+        prices = card_prices(card)
+        if prices:
+            keep_lowest(size_prices, mapped, prices[0])  # lowest advertised in card
 
-    for s, p in size_prices.items():
-        if s in pricing:
-            pricing[s] = int(round(p))
-
-    print(f"  OK Lockaway Storage: {sum(1 for v in pricing.values() if v is not None)} prices found")
-    return pricing
+    pricing = empty_pricing()
+    pricing.update({s: p for s, p in size_prices.items() if s in pricing})
+    return pricing, "ok"
 
 
 def scrape_public_storage(url, facility_name):
     """
-    Public Storage - uses data-pricebook-price attributes in HTML.
-    Non-standard sizes need mapping to our standard 5x10/10x10/etc.
-    Key fix: don't map 5x5 to 5x10 - only use actual 5x9+ for 5x10 equiv.
+    Public Storage: full unit cards carry a Features list and both an
+    online-only rate and an in-store rate. Use the online rate per size.
+    EXCLUDE uncovered parking listings.
     """
     html = fetch(url)
-    if not html:
-        return None
+    if html is None:
+        return None, "failed"
+    if "$" not in html:
+        return None, "blocked"
 
-    pricing = {"5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None}
-
-    # Find units: dimension text near data-pricebook-price attribute
-    # Try: dimensions BEFORE price
-    unit_blocks = re.findall(
-        r'(\d+)[\s\'\"&#;x39]*x\s*(\d+)[\s\'\"&#;x39]*.{0,2000}?data-pricebook-price="([\d.]+)"',
-        html, re.IGNORECASE | re.DOTALL
-    )
-
-    if not unit_blocks:
-        # Try: price BEFORE dimensions
-        alt_blocks = re.findall(
-            r'data-pricebook-price="([\d.]+)".{0,2000}?(\d+)[\s\'\"&#;x39]*x\s*(\d+)',
-            html, re.IGNORECASE | re.DOTALL
-        )
-        unit_blocks = [(b[1], b[2], b[0]) for b in alt_blocks]
-
-    # Map PS non-standard sizes to our targets
-    # IMPORTANT: 5x5 does NOT map to 5x10 - it's too small
     ps_map = {
         "5x9": "5x10", "5x10": "5x10", "5x14": "5x10", "5x15": "5x10",
-        "7x14": "10x10", "10x10": "10x10",
-        "10x15": "10x15",
+        "7x14": "10x10", "8x14": "10x10", "10x10": "10x10",
+        "10x15": "10x15", "7x19": "10x15",
         "10x19": "10x20", "10x20": "10x20",
-        "10x30": "10x30", "10x40": "10x30",
+        "10x30": "10x30",
     }
-
     size_prices = {}
-    for w, d, price in unit_blocks:
-        raw_key = size_key(w, d)
-        mapped = ps_map.get(raw_key)
+    for key, card, prefix in segment_cards(html):
+        mapped = ps_map.get(key)
         if not mapped:
-            mapped = ps_map.get(f"{w}x{d}")
-        if mapped:
-            price_val = float(price)
-            if mapped not in size_prices or price_val < size_prices[mapped]:
-                size_prices[mapped] = price_val
+            continue
+        # Only full unit cards carry a "Features" list; the page also renders
+        # bare summary rows (dimension + price, no features). Summary rows are
+        # skipped because they cannot be checked for the Uncovered/parking flag.
+        if "Features" not in card:
+            continue
+        if PARKING_RE.search(card):
+            continue  # "Uncovered" = a parking space, not an enclosed unit
+        # Prefer the online-only rate; fall back to the in-store rate.
+        m = re.search(r"Online[\s-]*(?:Only)?\s*[Pp]rice\s*\$\s*(\d+(?:\.\d{1,2})?)", card)
+        if not m:
+            m = re.search(r"In\s*Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
+        if m:
+            keep_lowest(size_prices, mapped, round(float(m.group(1))))
 
-    for s, p in size_prices.items():
-        if s in pricing:
-            pricing[s] = int(round(p))
-
-    print(f"  OK {facility_name}: {sum(1 for v in pricing.values() if v is not None)} prices found")
-    return pricing
+    pricing = empty_pricing()
+    pricing.update({s: p for s, p in size_prices.items() if s in pricing})
+    return pricing, "ok"
 
 
 def scrape_smartstop(url):
     """
-    SmartStop Self Storage - now publishes prices online.
-    Format: "10' x 15'" with "In-Store $140" and "Promo Rate $70/mo" nearby.
-    We capture the in-store (regular) price.
+    SmartStop renders pricing client-side with JavaScript; plain HTTP fetches
+    receive a page with no prices at all. Detect that and report 'blocked'
+    rather than silently keeping stale numbers.
     """
     html = fetch(url)
-    if not html:
-        return None
-
-    pricing = {"5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None}
-
-    # Pattern: dimensions ... "In-Store" ... "$XX" within a tight window
-    blocks = re.findall(
-        r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,400}?)In-Store\s*(?:<[^>]*>)*\s*\$(\d+(?:\.\d{2})?)',
-        html, re.IGNORECASE | re.DOTALL
-    )
-
-    if not blocks:
-        # Fallback: look for promo rate (the displayed price)
-        blocks = re.findall(
-            r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,400}?)(?:Promo\s+Rate|Starting)\s*(?:<[^>]*>)*\s*\$(\d+(?:\.\d{2})?)',
-            html, re.IGNORECASE | re.DOTALL
-        )
-
-    if not blocks:
-        # Even broader fallback
-        blocks = re.findall(
-            r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,300}?)\$(\d+(?:\.\d{2})?)',
-            html, re.IGNORECASE | re.DOTALL
-        )
+    if html is None:
+        return None, "failed"
+    if "$" not in html:
+        return None, "blocked"
 
     size_prices = {}
-    for w, d, price in blocks:
-        raw_key = size_key(w, d)
-        if raw_key in pricing:
-            price_val = float(price)
-            # Keep the cheapest per size category
-            if raw_key not in size_prices or price_val < size_prices[raw_key]:
-                size_prices[raw_key] = price_val
+    for key, card, prefix in segment_cards(html):
+        if key not in SIZES:
+            continue
+        m = re.search(r"In-?Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
+        if m:
+            keep_lowest(size_prices, key, round(float(m.group(1))))
 
-    for s, p in size_prices.items():
-        if s in pricing:
-            pricing[s] = int(round(p))
-
-    print(f"  OK SmartStop Self Storage: {sum(1 for v in pricing.values() if v is not None)} prices found")
-    return pricing
+    pricing = empty_pricing()
+    pricing.update(size_prices)
+    return pricing, "ok"
 
 
 def scrape_honea_egypt(url):
-    """
-    Honea Egypt Self Storage - ASP.NET page with prices as "$82.00/month".
-    Key fix: handle reversed dimensions like "10'x5'" -> 5x10.
-    """
+    """Honea Egypt: '$82.00/month' near dimensions; reversed dims normalized."""
     html = fetch(url)
-    if not html:
-        return None
-
-    pricing = {"5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None}
-
-    # Match: "5'x5'" ... "$37.50/month" with a tight window
-    blocks = re.findall(
-        r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,400}?)\$(\d+(?:\.\d{2})?)\s*/?\s*month',
-        html, re.IGNORECASE | re.DOTALL
-    )
+    if html is None:
+        return None, "failed"
+    if "$" not in html:
+        return None, "blocked"
 
     size_prices = {}
-    for w, d, price in blocks:
-        raw_key = size_key(w, d)  # normalize_size handles reversed dims
-        if raw_key in pricing:
-            price_val = float(price)
-            if raw_key not in size_prices or price_val < size_prices[raw_key]:
-                size_prices[raw_key] = price_val
+    for key, card, prefix in segment_cards(html):
+        if key not in SIZES:
+            continue
+        m = re.search(r"\$\s*(\d+(?:\.\d{1,2})?)\s*/?\s*month", card, re.I)
+        if m:
+            keep_lowest(size_prices, key, round(float(m.group(1))))
 
-    for s, p in size_prices.items():
-        if s in pricing:
-            pricing[s] = int(round(p))
-
-    print(f"  OK Honea Egypt: {sum(1 for v in pricing.values() if v is not None)} prices found")
-    return pricing
+    pricing = empty_pricing()
+    pricing.update(size_prices)
+    return pricing, "ok"
 
 
 def scrape_montgomery(url):
-    """
-    Montgomery Self Storage - prices shown as "$60" with unit sizes.
-    Has both climate and non-climate. We take the cheapest (non-climate).
-    """
+    """Montgomery: climate and non-climate; keep cheapest (non-climate) per size."""
     html = fetch(url)
-    if not html:
-        return None
-
-    pricing = {"5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None}
-
-    # Match dimension + price within a tight window
-    blocks = re.findall(
-        r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,300}?)\$(\d+(?:\.\d{2})?)',
-        html, re.IGNORECASE | re.DOTALL
-    )
+    if html is None:
+        return None, "failed"
+    if "$" not in html:
+        return None, "blocked"
 
     size_prices = {}
-    for w, d, price in blocks:
-        raw_key = size_key(w, d)
-        if raw_key in pricing:
-            price_val = float(price)
-            if raw_key not in size_prices or price_val < size_prices[raw_key]:
-                size_prices[raw_key] = price_val
+    for key, card, prefix in segment_cards(html):
+        if key not in SIZES:
+            continue
+        prices = card_prices(card)
+        if prices:
+            keep_lowest(size_prices, key, prices[0])
 
-    for s, p in size_prices.items():
-        if s in pricing:
-            pricing[s] = int(round(p))
-
-    print(f"  OK Montgomery Self Storage: {sum(1 for v in pricing.values() if v is not None)} prices found")
-    return pricing
+    pricing = empty_pricing()
+    pricing.update(size_prices)
+    return pricing, "ok"
 
 
 def scrape_woodlands_sao(url):
     """
-    Woodlands Storage & Office - may render via JavaScript.
-    They show units like "10' x 10'" with "$47" (regular) and "$23.50" (promo).
-    We want the regular (non-promo) price, shown as strikethrough.
+    Woodlands SAO: each card shows promo and regular prices. Rule: use the
+    REGULAR price (highest within the card); across multiple cards of the
+    same size, use the cheapest regular.
     """
     html = fetch(url)
-    if not html:
-        return None
+    if html is None:
+        return None, "failed"
+    if "$" not in html:
+        return None, "blocked"
 
-    pricing = {"5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None}
-
-    # Try to find dimension + price patterns
-    blocks = re.findall(
-        r'(\d+)[\s\'\"]*x\s*(\d+)[\s\'\"]*(?:.{0,400}?)\$(\d+(?:\.\d{2})?)',
-        html, re.IGNORECASE | re.DOTALL
-    )
-
-    # Map Woodlands non-standard sizes
     woodlands_map = {
-        "10x10": "10x10",
-        "10x12": "10x10",  # close
+        "10x10": "10x10", "10x12": "10x10",
         "10x20": "10x20",
-        "20x10": "10x20",  # reversed
-        "10x30": "10x30",
-        "12x30": "10x30",  # close
+        "10x30": "10x30", "12x30": "10x30",
     }
-
     size_prices = {}
-    for w, d, price in blocks:
-        raw_key = size_key(w, d)
-        mapped = woodlands_map.get(raw_key)
+    for key, card, prefix in segment_cards(html):
+        mapped = woodlands_map.get(key)
         if not mapped:
-            mapped = woodlands_map.get(f"{w}x{d}")
-        if mapped:
-            price_val = float(price)
-            # Keep the HIGHEST price per category (the regular price, not the promo)
-            if mapped not in size_prices or price_val > size_prices[mapped]:
-                size_prices[mapped] = price_val
+            continue
+        prices = card_prices(card)
+        if prices:
+            regular = prices[-1]  # highest in this card = regular price
+            keep_lowest(size_prices, mapped, regular)
 
-    for s, p in size_prices.items():
-        if s in pricing:
-            pricing[s] = int(round(p))
-
-    print(f"  OK Woodlands Storage & Office: {sum(1 for v in pricing.values() if v is not None)} prices found")
-    return pricing
+    pricing = empty_pricing()
+    pricing.update({s: p for s, p in size_prices.items() if s in pricing})
+    return pricing, "ok"
 
 
 # --- Main --------------------------------------------------------------------
 
 def main():
     print("=" * 60)
-    print("Magnolia Storage - Competitor Price Scraper")
-    print(f"Run time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
+    print("Magnolia Storage - Competitor Price Scraper v2")
+    print(f"Run time: {now_utc()}")
     print("=" * 60)
 
-    # Load existing data.json
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
 
     if os.path.exists(data_path):
@@ -343,101 +290,76 @@ def main():
     else:
         data = {"lastUpdated": None, "competitors": []}
 
-    # Define competitors and their scraping functions
     scrape_targets = [
-        {
-            "name": "Lockaway Storage",
-            "url": "https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",
-            "scraper": lambda url: scrape_lockaway(url),
-        },
-        {
-            "name": "Public Storage (FM 1488)",
-            "url": "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
-            "scraper": lambda url: scrape_public_storage(url, "Public Storage (FM 1488)"),
-        },
-        {
-            "name": "Public Storage (FM 2978)",
-            "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
-            "scraper": lambda url: scrape_public_storage(url, "Public Storage (FM 2978)"),
-        },
-        {
-            "name": "SmartStop Self Storage",
-            "url": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
-            "scraper": lambda url: scrape_smartstop(url),
-        },
-        {
-            "name": "Honea Egypt Self Storage",
-            "url": "https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",
-            "scraper": lambda url: scrape_honea_egypt(url),
-        },
-        {
-            "name": "Montgomery Self Storage",
-            "url": "https://montgomeryss.com/locations/magnolia-tx/",
-            "scraper": lambda url: scrape_montgomery(url),
-        },
-        {
-            "name": "Woodlands Storage & Office",
-            "url": "https://www.woodlandssao.com/units",
-            "scraper": lambda url: scrape_woodlands_sao(url),
-        },
-        {
-            "name": "Storage King USA",
-            "url": None,  # RV/boat parking only, no enclosed unit pricing
-            "scraper": None,
-        },
+        {"name": "Lockaway Storage",
+         "url": "https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",
+         "scraper": scrape_lockaway},
+        {"name": "Public Storage (FM 1488)",
+         "url": "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
+         "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 1488)")},
+        {"name": "Public Storage (FM 2978)",
+         "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
+         "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)")},
+        {"name": "SmartStop Self Storage",
+         "url": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
+         "scraper": scrape_smartstop},
+        {"name": "Honea Egypt Self Storage",
+         "url": "https://www.honeaegyptselfstorage.com/find-storage.aspx?id=68",
+         "scraper": scrape_honea_egypt},
+        {"name": "Montgomery Self Storage",
+         "url": "https://montgomeryss.com/locations/magnolia-tx/",
+         "scraper": scrape_montgomery},
+        {"name": "Woodlands Storage & Office",
+         "url": "https://www.woodlandssao.com/units",
+         "scraper": scrape_woodlands_sao},
+        {"name": "Storage King USA",
+         "url": None,  # RV/boat parking only, no enclosed units
+         "scraper": None},
     ]
 
-    # Build lookup of existing competitor data
-    existing = {}
-    for c in data.get("competitors", []):
-        existing[c["name"]] = c
-
+    existing = {c["name"]: c for c in data.get("competitors", [])}
     changes = []
 
     for target in scrape_targets:
         name = target["name"]
-        old_data = existing.get(name, {})
-        old_pricing = old_data.get("pricing", {
-            "5x10": None, "10x10": None, "10x15": None, "10x20": None, "10x30": None
-        })
+        entry = existing.setdefault(name, {"name": name, "pricing": empty_pricing()})
+        old_pricing = entry.get("pricing", empty_pricing())
 
         if target["scraper"] is None:
-            print(f"\nSKIP {name} (no online pricing)")
-            new_pricing = old_pricing
-        else:
-            print(f"\nSCAN {name}...")
-            new_pricing = target["scraper"](target["url"])
-            if new_pricing is None:
-                print(f"  WARNING: Scrape failed, keeping old data")
-                new_pricing = old_pricing
-            else:
-                # If scraper returned all nulls but we had data before, keep old data
-                all_null = all(v is None for v in new_pricing.values())
-                had_data = any(v is not None for v in old_pricing.values())
-                if all_null and had_data:
-                    print(f"  WARNING: Scraper returned all nulls but old data exists, keeping old data")
-                    new_pricing = old_pricing
-                else:
-                    # Log price changes
-                    for s in ["5x10", "10x10", "10x15", "10x20", "10x30"]:
-                        old_val = old_pricing.get(s)
-                        new_val = new_pricing.get(s)
-                        if old_val != new_val:
-                            changes.append(f"  {name} {s}: ${old_val} -> ${new_val}")
+            print(f"\nSKIP {name} (no enclosed-unit pricing)")
+            entry["scrapeStatus"] = "n/a"
+            continue
 
-        # Update pricing in existing data, preserving all other fields
-        if name in existing:
-            existing[name]["pricing"] = new_pricing
-        else:
-            existing[name] = {"name": name, "pricing": new_pricing}
+        print(f"\nSCAN {name}...")
+        new_pricing, status = target["scraper"](target["url"])
 
-    # Update timestamp
-    data["lastUpdated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        if status != "ok" or new_pricing is None:
+            # Keep old numbers but be HONEST about it: status recorded,
+            # lastVerified NOT bumped. The dashboard shows this as stale.
+            print(f"  {status.upper()}: keeping previous data, marked as unverified")
+            entry["scrapeStatus"] = status
+            continue
 
-    # Rebuild competitors list preserving original order
+        all_null = all(v is None for v in new_pricing.values())
+        had_data = any(v is not None for v in old_pricing.values())
+        if all_null and had_data:
+            print("  WARNING: scrape parsed zero prices; keeping old data, marked unverified")
+            entry["scrapeStatus"] = "failed"
+            continue
+
+        for s in SIZES:
+            if old_pricing.get(s) != new_pricing.get(s):
+                changes.append(f"  {name} {s}: ${old_pricing.get(s)} -> ${new_pricing.get(s)}")
+
+        entry["pricing"] = new_pricing
+        entry["scrapeStatus"] = "ok"
+        entry["lastVerified"] = now_utc()
+        found = sum(1 for v in new_pricing.values() if v is not None)
+        print(f"  OK {name}: {found} prices found")
+
+    data["lastUpdated"] = now_utc()
     data["competitors"] = [existing[t["name"]] for t in scrape_targets if t["name"] in existing]
 
-    # Write updated data
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -450,7 +372,6 @@ def main():
         print("NO CHANGES: All prices unchanged")
     print(f"SAVED: {data_path}")
     print("=" * 60)
-
     return 0
 
 
