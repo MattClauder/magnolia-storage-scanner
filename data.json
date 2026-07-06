@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-05 20:41 UTC",
+  "lastUpdated": "2026-07-06 16:20 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": 277
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-05 20:41 UTC",
+      "lastVerified": "2026-07-06 16:20 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 52,
@@ -79,7 +79,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-05 20:41 UTC",
+      "lastVerified": "2026-07-06 16:20 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 50,
@@ -126,7 +126,7 @@
         "10x30": 204
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-05 20:41 UTC",
+      "lastVerified": "2026-07-06 16:20 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 29,
@@ -175,7 +175,7 @@
         "10x20": 218,
         "10x30": null
       },
-      "scrapeStatus": "blocked",
+      "scrapeStatus": "failed",
       "pricingFull": {
         "5x10": {
           "regular": 44,
@@ -215,25 +215,25 @@
       ],
       "notes": "All units climate-controlled interior. 3-story building.",
       "pricing": {
-        "5x10": 67,
+        "5x10": 66,
         "10x10": null,
         "10x15": null,
         "10x20": 239,
         "10x30": 234
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-05 20:41 UTC (browser audit)",
+      "lastVerified": "2026-07-06 16:20 UTC",
       "pricingFull": {
+        "10x30": {
+          "regular": 234,
+          "promo": null
+        },
         "5x10": {
-          "regular": 67,
+          "regular": 66,
           "promo": null
         },
         "10x20": {
           "regular": 239,
-          "promo": null
-        },
-        "10x30": {
-          "regular": 234,
           "promo": null
         }
       }
@@ -262,7 +262,7 @@
         "10x20": 160,
         "10x30": 260
       },
-      "scrapeStatus": "ok",
+      "scrapeStatus": "failed",
       "lastVerified": "2026-07-05 20:41 UTC (browser audit)",
       "pricingFull": {
         "5x10": {
@@ -313,7 +313,7 @@
         "10x20": 175,
         "10x30": 225
       },
-      "scrapeStatus": "ok",
+      "scrapeStatus": "blocked",
       "lastVerified": "2026-07-05 20:41 UTC (browser audit)",
       "pricingFull": {
         "10x10": {
