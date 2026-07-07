@@ -327,6 +327,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('chart')">Chart View</button>
     <button class="tab-btn" onclick="switchTab('details')">Facility Details</button>
+    <button class="tab-btn" onclick="switchTab('trends')">Rate Trends</button>
   </div>
 
   <!-- CHART TAB -->
@@ -335,6 +336,16 @@
     <div class="chart-container">
       <h3 id="chartTitle">Price Comparison</h3>
       <div class="bar-chart" id="barChart"></div>
+    </div>
+  </div>
+
+  <!-- TRENDS TAB -->
+  <div class="tab-content" id="tab-trends">
+    <div class="unit-selector" id="unitSelectorTrends"></div>
+    <div class="chart-container">
+      <h3 id="trendsTitle">Rate Trends</h3>
+      <div id="trendsChart"></div>
+      <div id="trendsNote" style="font-size:12px;color:var(--gray-500);margin-top:10px;"></div>
     </div>
   </div>
 
@@ -642,7 +653,7 @@ function renderDetails() {
 // UNIT SELECTOR
 // ============================================
 function renderUnitSelectors() {
-  ['unitSelectorChart'].forEach(id => {
+  ['unitSelectorChart', 'unitSelectorTrends'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = unitSizes.map(s =>
@@ -670,11 +681,83 @@ function switchTab(tab) {
 // ============================================
 // REFRESH
 // ============================================
+function monthlySeries() {
+  const snaps = (fullData && fullData.history) ? fullData.history : [];
+  const byMonth = {};
+  snaps.forEach(s => { byMonth[s.date.slice(0,7)] = s; });  // last snapshot wins per month
+  const months = Object.keys(byMonth).sort();
+  return {months, byMonth, dayCount: snaps.length};
+}
+
+const TREND_COLORS = ['#1e3a5f','#c2410c','#0e7490','#7c3aed','#be185d','#4d7c0f','#b45309','#334155'];
+
+function renderTrends() {
+  const el = document.getElementById('trendsChart');
+  const note = document.getElementById('trendsNote');
+  if (!el) return;
+  document.getElementById('trendsTitle').textContent = selectedUnit + ' Unit, Rate History (monthly)';
+  const {months, byMonth, dayCount} = monthlySeries();
+  if (months.length < 2) {
+    el.innerHTML = '<div style="padding:36px 12px;text-align:center;color:var(--gray-500);">Collecting daily snapshots since Jul 2026. The trend line appears once a second month of data exists.<br><span style="font-size:12px;">' + dayCount + ' snapshot(s) recorded so far.</span></div>';
+    note.textContent = '';
+    return;
+  }
+  // Build series: Magnolia first, then facilities
+  const series = [];
+  const myVals = months.map(m => (byMonth[m].my || {})[selectedUnit] ?? null);
+  series.push({name: 'Magnolia Storage (You)', vals: myVals, me: true});
+  const facNames = [...new Set(months.flatMap(m => Object.keys(byMonth[m].facilities || {})))];
+  facNames.forEach(fn => {
+    const vals = months.map(m => ((byMonth[m].facilities || {})[fn] || {})[selectedUnit] ?? null);
+    if (vals.some(v => v !== null)) series.push({name: fn, vals, me: false});
+  });
+  const all = series.flatMap(s => s.vals).filter(v => v !== null);
+  const yMax = Math.max(...all) * 1.08, yMin = Math.max(0, Math.min(...all) * 0.9);
+  const W = 860, Hh = 340, padL = 44, padR = 10, padT = 14, padB = 34;
+  const x = i => padL + (W - padL - padR) * (months.length === 1 ? 0.5 : i / (months.length - 1));
+  const y = v => padT + (Hh - padT - padB) * (1 - (v - yMin) / (yMax - yMin || 1));
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;font-family:inherit;">';
+  for (let g = 0; g <= 4; g++) {
+    const gv = yMin + (yMax - yMin) * g / 4;
+    svg += '<line x1="' + padL + '" y1="' + y(gv) + '" x2="' + (W - padR) + '" y2="' + y(gv) + '" stroke="#e5e7eb" stroke-width="1"/>';
+    svg += '<text x="' + (padL - 6) + '" y="' + (y(gv) + 4) + '" text-anchor="end" font-size="11" fill="#6b7280">
+
+// Init, load live data from data.json
+loadData();
+</script>
+
+</body>
+</html>
+ + Math.round(gv) + '</text>';
+  }
+  months.forEach((m, i) => {
+    svg += '<text x="' + x(i) + '" y="' + (Hh - 12) + '" text-anchor="middle" font-size="11" fill="#6b7280">' + m.slice(2) + '</text>';
+  });
+  series.forEach((s, si) => {
+    const col = s.me ? '#0f172a' : TREND_COLORS[(si - 1) % TREND_COLORS.length];
+    const pts = s.vals.map((v, i) => v === null ? null : [x(i), y(v)]);
+    let d = '', pen = false;
+    pts.forEach(p => { if (!p) { pen = false; return; } d += (pen ? ' L ' : ' M ') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); pen = true; });
+    if (d) svg += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (s.me ? 3.5 : 2) + '" ' + (s.me ? '' : 'opacity="0.85"') + '/>';
+    pts.forEach(p => { if (p) svg += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (s.me ? 4 : 3) + '" fill="' + col + '"/>'; });
+  });
+  svg += '</svg>';
+  let legend = '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:12px;">';
+  series.forEach((s, si) => {
+    const col = s.me ? '#0f172a' : TREND_COLORS[(si - 1) % TREND_COLORS.length];
+    legend += '<span><span style="display:inline-block;width:11px;height:11px;border-radius:2px;background:' + col + ';margin-right:5px;vertical-align:-1px;"></span>' + (s.me ? '<strong>' + s.name + '</strong>' : s.name) + '</span>';
+  });
+  legend += '</div>';
+  el.innerHTML = svg + legend;
+  note.textContent = 'One point per month (latest scan of the month). Lines gap where a size was not offered or a facility could not be verified.';
+}
+
 function refreshAll() {
   renderSummary();
   renderUnitSelectors();
   renderChart();
   renderDetails();
+  renderTrends();
 }
 
 // Init, load live data from data.json
