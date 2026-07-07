@@ -619,7 +619,7 @@ function renderDetails() {
 
     html += `
       <div class="card">
-        <div class="card-title">${c.name} <span class="dist-badge">${c.distance}</span>${(c.scrapeStatus && c.scrapeStatus !== 'ok' && c.scrapeStatus !== 'n/a') ? ' <span title="Last scan could not verify this facility. Prices may be outdated." style="color:#b45309;font-size:0.75rem;font-weight:600;">&#9888; unverified</span>' : (c.lastVerified ? ` <span style="color:var(--gray-400);font-size:0.7rem;">verified ${c.lastVerified.split(' ')[0]}</span>` : '')}</div>
+        <div class="card-title">${c.name} <span class="dist-badge">${c.distance}</span>${(c.scrapeStatus && c.scrapeStatus !== 'ok' && c.scrapeStatus !== 'n/a') ? (c.lastVerified ? ` <span title="Automated scan is blocked by this site; prices are from the last manual check." style="color:#b45309;font-size:0.72rem;font-weight:600;">&#9888; auto-scan blocked &middot; verified ${c.lastVerified.split(' ')[0]}</span>` : ' <span title="Last scan could not verify this facility. Prices may be outdated." style="color:#b45309;font-size:0.75rem;font-weight:600;">&#9888; unverified</span>') : (c.lastVerified ? ` <span style="color:var(--gray-400);font-size:0.7rem;">verified ${c.lastVerified.split(' ')[0]}</span>` : '')}</div>
         <div class="card-meta">
           ${c.address} ${c.phone ? '&nbsp;|&nbsp; ' + c.phone : ''} &nbsp;|&nbsp;
           <a href="${c.website}" target="_blank">Website</a>
