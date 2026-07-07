@@ -167,34 +167,17 @@
         "Admin Fee $29",
         "Indoor Units"
       ],
-      "notes": "Pricing renders via JavaScript; automated scans are blocked. Values shown are last known and UNVERIFIED. Call (281) 602-8910 to confirm.",
+      "notes": "Formerly Amazing Spaces; recently rebranded to SmartStop. Pricing is gated behind bot protection and cannot be read automatically. Call (281) 602-8910 for rates. Prices will appear here automatically if their site opens up to the daily scan.",
       "pricing": {
-        "5x10": 44,
-        "10x10": 81,
-        "10x15": 121,
-        "10x20": 218,
+        "5x10": null,
+        "10x10": null,
+        "10x15": null,
+        "10x20": null,
         "10x30": null
       },
-      "scrapeStatus": "failed",
-      "pricingFull": {
-        "5x10": {
-          "regular": 44,
-          "promo": null
-        },
-        "10x10": {
-          "regular": 81,
-          "promo": null
-        },
-        "10x15": {
-          "regular": 121,
-          "promo": null
-        },
-        "10x20": {
-          "regular": 218,
-          "promo": null
-        }
-      },
-      "promoNote": "Up to 50% off + free 1st month (advertised; unverified)"
+      "scrapeStatus": "blocked",
+      "pricingFull": {},
+      "lastVerified": null
     },
     {
       "name": "Honea Egypt Self Storage",
