@@ -574,7 +574,8 @@ function renderChart() {
   let entries = [{name: "Magnolia Storage (You)", price: my[selectedUnit], yours: true}];
   competitors.forEach(c => {
     if (c.pricing[selectedUnit] !== null) {
-      entries.push({name: c.name, price: c.pricing[selectedUnit], yours: false, distance: c.distance, website: c.website, stale: !!(c.scrapeStatus && c.scrapeStatus !== 'ok' && c.scrapeStatus !== 'n/a')});
+      const cf = (c.pricingFull || {})[selectedUnit];
+      entries.push({name: c.name, price: c.pricing[selectedUnit], regular: (cf && cf.regular !== null && cf.regular !== c.pricing[selectedUnit]) ? cf.regular : null, yours: false, distance: c.distance, website: c.website, stale: !!(c.scrapeStatus && c.scrapeStatus !== 'ok' && c.scrapeStatus !== 'n/a')});
     }
   });
 
@@ -589,7 +590,7 @@ function renderChart() {
       <div class="bar-row">
         <div class="bar-label">${label}</div>
         <div class="bar-track">
-          <div class="bar-fill ${cls}" style="width:${pct}%">$${e.price}/mo</div>
+          <div class="bar-fill ${cls}" style="width:${pct}%">$${e.price}/mo${e.regular ? ` <span style="text-decoration:line-through;opacity:0.6;font-weight:400;">$${e.regular}</span>` : ''}</div>
         </div>
       </div>`;
   });
