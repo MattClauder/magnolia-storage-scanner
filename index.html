@@ -575,7 +575,8 @@ function renderChart() {
   competitors.forEach(c => {
     if (c.pricing[selectedUnit] !== null) {
       const cf = (c.pricingFull || {})[selectedUnit];
-      entries.push({name: c.name, price: c.pricing[selectedUnit], regular: (cf && cf.regular !== null && cf.regular !== c.pricing[selectedUnit]) ? cf.regular : null, yours: false, distance: c.distance, website: c.website, stale: !!(c.scrapeStatus && c.scrapeStatus !== 'ok' && c.scrapeStatus !== 'n/a')});
+      const shown = (cf && cf.promo !== null && cf.promo !== undefined) ? cf.promo : c.pricing[selectedUnit];
+      entries.push({name: c.name, price: shown, regular: (cf && cf.regular !== null && cf.regular !== shown) ? cf.regular : null, yours: false, distance: c.distance, website: c.website, stale: !!(c.scrapeStatus && c.scrapeStatus !== 'ok' && c.scrapeStatus !== 'n/a')});
     }
   });
 
