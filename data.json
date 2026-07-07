@@ -262,8 +262,8 @@
         "10x20": 160,
         "10x30": 260
       },
-      "scrapeStatus": "failed",
-      "lastVerified": "2026-07-05 20:41 UTC (browser audit)",
+      "scrapeStatus": "ok",
+      "lastVerified": "2026-07-06 (browser audit)",
       "pricingFull": {
         "5x10": {
           "regular": 60,
@@ -313,8 +313,8 @@
         "10x20": 175,
         "10x30": 225
       },
-      "scrapeStatus": "blocked",
-      "lastVerified": "2026-07-05 20:41 UTC (browser audit)",
+      "scrapeStatus": "ok",
+      "lastVerified": "2026-07-06 (browser audit)",
       "pricingFull": {
         "10x10": {
           "regular": 75,
