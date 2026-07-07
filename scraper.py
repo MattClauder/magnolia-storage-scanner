@@ -381,6 +381,28 @@ def main():
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+    # --- Price history: one snapshot per day (effective rate per size) ---
+    hist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.json")
+    if os.path.exists(hist_path):
+        with open(hist_path, "r", encoding="utf-8") as f:
+            hist = json.load(f)
+    else:
+        hist = {"snapshots": []}
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    snapshot = {
+        "date": today,
+        "my": data.get("myPricing"),
+        "facilities": {c["name"]: c.get("pricing") for c in data["competitors"] if c.get("scrapeStatus") != "n/a"},
+    }
+    snaps = hist.setdefault("snapshots", [])
+    if snaps and snaps[-1].get("date") == today:
+        snaps[-1] = snapshot  # same-day rerun replaces
+    else:
+        snaps.append(snapshot)
+    with open(hist_path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, indent=2, ensure_ascii=False)
+    print(f"HISTORY: {len(snaps)} snapshot(s), latest {today}")
+
     print("\n" + "=" * 60)
     if changes:
         print(f"CHANGES: {len(changes)} price change(s) detected:")
