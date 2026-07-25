@@ -35,8 +35,13 @@ PROXY_HOSTS = ("montgomeryss.com",)
 
 
 def _via_scraper_api(url):
-    """Wrap a target URL in a ScraperAPI request (residential IP, no JS render)."""
+    """
+    Wrap a target URL in a ScraperAPI request. `premium=true` uses residential
+    IPs — required for hosts (like Montgomery) that reset connections from
+    datacenter IPs, which ScraperAPI's default proxy pool also uses.
+    """
     return ("https://api.scraperapi.com/?api_key=" + SCRAPER_API_KEY
+            + "&premium=true&country_code=us"
             + "&url=" + quote(url, safe=""))
 
 SIZES = ["5x10", "10x10", "10x15", "10x20", "10x30"]
