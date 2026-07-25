@@ -41,7 +41,7 @@ def _via_scraper_api(url):
     datacenter IPs, which ScraperAPI's default proxy pool also uses.
     """
     return ("https://api.scraperapi.com/?api_key=" + SCRAPER_API_KEY
-            + "&premium=true&country_code=us"
+            + "&premium=true&country_code=us&render=true"
             + "&url=" + quote(url, safe=""))
 
 SIZES = ["5x10", "10x10", "10x15", "10x20", "10x30"]
@@ -128,8 +128,8 @@ def fetch(url, timeout=45):
     # Hosts that block CI IPs: route through the residential scraping API (if a
     # key is set). Their prices are server-rendered, so no JS render is needed.
     if SCRAPER_API_KEY and any(h in url for h in PROXY_HOSTS):
-        print("  routing via ScraperAPI (residential IP)")
-        html = _fetch_static(_via_scraper_api(url), timeout=70)
+        print("  routing via ScraperAPI (residential IP + JS render)")
+        html = _fetch_static(_via_scraper_api(url), timeout=120)
         if html:
             return html
         print("  NOTE: ScraperAPI fetch empty; falling back to direct")
