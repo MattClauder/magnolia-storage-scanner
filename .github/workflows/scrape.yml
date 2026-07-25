@@ -21,6 +21,8 @@ jobs:
           python-version: '3.12'
 
       - name: Run scraper
+        env:
+          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
         run: python scraper.py
 
       - name: Commit and push if changed
