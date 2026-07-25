@@ -38,19 +38,99 @@ def now_utc():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
-def fetch(url, timeout=30):
-    """Fetch a URL and return the HTML as a string, or None on failure."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                       "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-    }
-    req = Request(url, headers=headers)
+USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+
+
+def ensure_playwright():
+    """
+    Make headless Chromium available in the CI runner without editing the
+    workflow: install the playwright package if missing, then fetch the
+    Chromium binary. Best-effort — if anything fails, fetch() falls back to a
+    plain HTTP GET, so the scraper still runs (just without JS rendering).
+    """
+    import subprocess
+    try:
+        import playwright  # noqa: F401
+    except Exception:
+        print("Bootstrapping Playwright (pip install)...")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "playwright"],
+                           check=True, capture_output=True)
+        except Exception as e:
+            print(f"  NOTE: pip install playwright failed: {e}")
+            return False
+    try:
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"],
+                       check=False, capture_output=True)
+    except Exception as e:
+        print(f"  NOTE: chromium install skipped: {e}")
+    return True
+
+
+def _fetch_static(url, timeout=30):
+    """Plain HTTP GET (no JavaScript). Fallback when Playwright is unavailable."""
+    req = Request(url, headers={"User-Agent": USER_AGENT})
     try:
         with urlopen(req, timeout=timeout) as resp:
             return resp.read().decode("utf-8", errors="replace")
     except Exception as e:
-        print(f"  WARNING: Failed to fetch {url}: {e}")
+        print(f"  WARNING: static fetch failed for {url}: {e}")
         return None
+
+
+def _reveal_units(page):
+    """
+    Some sites (e.g. SmartStop) hide unit pricing behind 'Show ... Units' /
+    'View all' toggles that only populate the DOM once clicked. Click any such
+    controls so the prices render into the HTML we parse. Best-effort; never
+    raises.
+    """
+    try:
+        toggles = page.get_by_text(
+            re.compile(r"show\s+.*units|view\s+all\s+units|see\s+prices|show\s+units", re.I)
+        )
+        for i in range(min(toggles.count(), 12)):
+            try:
+                toggles.nth(i).click(timeout=2500)
+                page.wait_for_timeout(400)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+def fetch(url, timeout=45):
+    """
+    Fetch fully-rendered HTML using headless Chromium so JavaScript-rendered
+    prices (SmartStop, Public Storage, Lockaway, etc.) actually appear.
+    Falls back to a plain HTTP GET if Playwright isn't installed.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        print("  NOTE: Playwright unavailable, using static fetch")
+        return _fetch_static(url, timeout)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+            page = browser.new_page(user_agent=USER_AGENT)
+            try:
+                page.goto(url, wait_until="domcontentloaded", timeout=timeout * 1000)
+                try:
+                    page.wait_for_load_state("networkidle", timeout=15000)
+                except Exception:
+                    pass  # networkidle can time out on chatty pages; keep going
+                _reveal_units(page)
+                page.wait_for_timeout(2000)  # let late price widgets settle
+                html = page.content()
+            finally:
+                browser.close()
+            return html
+    except Exception as e:
+        print(f"  WARNING: Playwright fetch failed for {url}: {e}; trying static")
+        return _fetch_static(url, timeout)
 
 
 def strip_tags(html):
@@ -293,9 +373,10 @@ def scrape_woodlands_sao(url):
 
 def main():
     print("=" * 60)
-    print("Magnolia Storage - Competitor Price Scraper v2")
+    print("Magnolia Storage - Competitor Price Scraper v3 (JS rendering)")
     print(f"Run time: {now_utc()}")
     print("=" * 60)
+    ensure_playwright()
 
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
 
