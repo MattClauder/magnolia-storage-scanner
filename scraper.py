@@ -416,6 +416,13 @@ def scrape_honea_egypt(url):
     return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
 
 
+# Montgomery unit prices are formatted "$260.00/mo"; its promo banner uses
+# "$165/Month" (no cents, and typographic primes in "10' x 20'" that the
+# dimension regex misses, so the promo bled into the last unit's card). Match
+# ONLY the "$NN.NN/mo" unit format to exclude the promo.
+MONTGOMERY_PRICE_RE = re.compile(r"\$\s*(\d+\.\d{2})\s*/\s*mo\b", re.I)
+
+
 def scrape_montgomery(url):
     """Montgomery: climate and non-climate; keep cheapest (non-climate) per size."""
     html = fetch(url)
@@ -428,7 +435,7 @@ def scrape_montgomery(url):
     for key, card, prefix in segment_cards(html):
         if key not in SIZES:
             continue
-        prices = card_prices(card)
+        prices = sorted(round(float(p)) for p in MONTGOMERY_PRICE_RE.findall(card))
         if prices:
             keep_lowest(size_prices, key, prices[0])
 
