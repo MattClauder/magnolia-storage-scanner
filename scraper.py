@@ -266,18 +266,95 @@ def scrape_public_storage(url, facility_name):
     return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
+def _extract_json_data(html):
+    """Pull the `window.JSON_DATA = {...}` object out of SmartStop's HTML via a
+    balanced-brace scan (the object is deeply nested, so regex won't do)."""
+    m = re.search(r"window\.JSON_DATA\s*=\s*", html)
+    if not m:
+        return None
+    start = html.find("{", m.end())
+    if start == -1:
+        return None
+    depth = 0
+    in_str = False
+    esc = False
+    for i in range(start, len(html)):
+        ch = html[i]
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+        else:
+            if ch == '"':
+                in_str = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(html[start:i + 1])
+                    except Exception:
+                        return None
+    return None
+
+
 def scrape_smartstop(url):
     """
-    SmartStop renders pricing client-side with JavaScript; plain HTTP fetches
-    receive a page with no prices at all. Detect that and report 'blocked'
-    rather than silently keeping stale numbers.
+    SmartStop is an Umbraco site that ships unit data inside a `window.JSON_DATA`
+    blob rather than the rendered DOM. Read locationDetail.location.units[] and
+    take the lowest online (web) rate per size. When the location has no online
+    units (units == []), it shows a "call for availability" message — report OK
+    with no prices instead of pretending old numbers are current.
+    Falls back to the legacy 'In-Store $' regex if the blob isn't present.
     """
     html = fetch(url)
     if html is None:
         return None, "failed"
+
+    data = _extract_json_data(html)
+    if data is not None:
+        loc = (data.get("locationDetail") or {}).get("location") or {}
+        units = loc.get("units") or []
+        size_prices, size_full = {}, {}
+        for u in units:
+            if not isinstance(u, dict):
+                continue
+            w = u.get("width") or u.get("unitWidth")
+            l = u.get("length") or u.get("unitLength")
+            key = None
+            if w and l:
+                lo, hi = sorted((int(float(w)), int(float(l))))
+                key = f"{lo}x{hi}"
+            else:
+                nm = str(u.get("size") or u.get("unitTypeName") or u.get("name") or "")
+                dm = DIM_RE.search(nm)
+                if dm:
+                    lo, hi = sorted((int(dm.group(1)), int(dm.group(2))))
+                    key = f"{lo}x{hi}"
+            if key not in SIZES:
+                continue
+            web = (u.get("webRate") or u.get("pushRate") or u.get("onlineRate")
+                   or u.get("rate") or u.get("price"))
+            if web is None:
+                continue
+            web = round(float(web))
+            std = u.get("standardRate") or u.get("streetRate") or u.get("inStoreRate") or web
+            if key not in size_prices or web < size_prices[key]:
+                size_prices[key] = web
+                size_full[key] = {"regular": round(float(std)), "promo": web if web < float(std) else None}
+        pricing = empty_pricing()
+        pricing.update(size_prices)
+        # units==[] is a legitimate "call for availability" state, still a
+        # successful read — just no comparable online prices right now.
+        return {"pricing": pricing, "pricingFull": size_full}, "ok"
+
+    # Legacy fallback (older markup with visible In-Store prices).
     if "$" not in html:
         return None, "blocked"
-
     size_prices = {}
     for key, card, prefix in segment_cards(html):
         if key not in SIZES:
@@ -285,7 +362,6 @@ def scrape_smartstop(url):
         m = re.search(r"In-?Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
         if m:
             keep_lowest(size_prices, key, round(float(m.group(1))))
-
     pricing = empty_pricing()
     pricing.update(size_prices)
     return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
