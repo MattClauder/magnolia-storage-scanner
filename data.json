@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-25 03:26 UTC",
+  "lastUpdated": "2026-07-25 14:39 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": 264
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-25 03:24 UTC",
+      "lastVerified": "2026-07-25 14:38 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 52,
@@ -75,11 +75,11 @@
         "5x10": 35,
         "10x10": 67,
         "10x15": 100,
-        "10x20": 119,
+        "10x20": 108,
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-25 03:25 UTC",
+      "lastVerified": "2026-07-25 14:38 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 47,
@@ -94,8 +94,8 @@
           "promo": 100
         },
         "10x20": {
-          "regular": 144,
-          "promo": 119
+          "regular": 180,
+          "promo": 108
         }
       },
       "promoNote": "Online-only rate; $1 first month promo, $29 admin fee"
@@ -119,18 +119,18 @@
       ],
       "notes": "$1 first month promo. Admin fee: $29. Limited sizes available.",
       "pricing": {
-        "5x10": 20,
+        "5x10": 22,
         "10x10": 64,
         "10x15": 117,
         "10x20": 234,
         "10x30": 194
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-25 03:25 UTC",
+      "lastVerified": "2026-07-25 14:38 UTC",
       "pricingFull": {
         "5x10": {
-          "regular": 34,
-          "promo": 20
+          "regular": 27,
+          "promo": 22
         },
         "10x10": {
           "regular": 80,
@@ -177,7 +177,7 @@
       },
       "scrapeStatus": "ok",
       "pricingFull": {},
-      "lastVerified": "2026-07-25 03:25 UTC"
+      "lastVerified": "2026-07-25 14:38 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -205,7 +205,7 @@
         "10x30": 234
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-25 03:25 UTC",
+      "lastVerified": "2026-07-25 14:38 UTC",
       "pricingFull": {
         "10x30": {
           "regular": 234,
@@ -246,7 +246,7 @@
         "10x30": 260
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-25 03:26 UTC",
+      "lastVerified": "2026-07-25 14:39 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 60,
@@ -297,7 +297,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-25 03:26 UTC",
+      "lastVerified": "2026-07-25 14:39 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -1532,11 +1532,11 @@
           "5x10": 35,
           "10x10": 67,
           "10x15": 100,
-          "10x20": 119,
+          "10x20": 108,
           "10x30": null
         },
         "Public Storage (FM 2978)": {
-          "5x10": 20,
+          "5x10": 22,
           "10x10": 64,
           "10x15": 117,
           "10x20": 234,
