@@ -24,6 +24,20 @@ import os
 import sys
 from datetime import datetime, timezone
 from urllib.request import urlopen, Request
+from urllib.parse import quote
+
+# Some competitor sites block datacenter/CI IPs at the network level (TCP reset),
+# which no header or headless browser can beat. For those hosts only, route the
+# request through a residential scraping API when a key is configured. The key is
+# read from the SCRAPER_API_KEY env var (a GitHub Actions secret), never hardcoded.
+SCRAPER_API_KEY = os.environ.get("SCRAPER_API_KEY", "").strip()
+PROXY_HOSTS = ("montgomeryss.com",)
+
+
+def _via_scraper_api(url):
+    """Wrap a target URL in a ScraperAPI request (residential IP, no JS render)."""
+    return ("https://api.scraperapi.com/?api_key=" + SCRAPER_API_KEY
+            + "&url=" + quote(url, safe=""))
 
 SIZES = ["5x10", "10x10", "10x15", "10x20", "10x30"]
 
@@ -106,6 +120,15 @@ def fetch(url, timeout=45):
     prices (SmartStop, Public Storage, Lockaway, etc.) actually appear.
     Falls back to a plain HTTP GET if Playwright isn't installed.
     """
+    # Hosts that block CI IPs: route through the residential scraping API (if a
+    # key is set). Their prices are server-rendered, so no JS render is needed.
+    if SCRAPER_API_KEY and any(h in url for h in PROXY_HOSTS):
+        print("  routing via ScraperAPI (residential IP)")
+        html = _fetch_static(_via_scraper_api(url), timeout=70)
+        if html:
+            return html
+        print("  NOTE: ScraperAPI fetch empty; falling back to direct")
+
     try:
         from playwright.sync_api import sync_playwright
     except Exception:
