@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-26 14:37 UTC",
+  "lastUpdated": "2026-07-27 15:43 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": 264
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-26 14:36 UTC",
+      "lastVerified": "2026-07-27 15:42 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 52,
@@ -79,7 +79,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-26 14:36 UTC",
+      "lastVerified": "2026-07-27 15:42 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 47,
@@ -119,18 +119,18 @@
       ],
       "notes": "$1 first month promo. Admin fee: $29. Limited sizes available.",
       "pricing": {
-        "5x10": 22,
+        "5x10": 20,
         "10x10": 64,
         "10x15": 117,
         "10x20": 234,
         "10x30": 194
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-26 14:37 UTC",
+      "lastVerified": "2026-07-27 15:42 UTC",
       "pricingFull": {
         "5x10": {
-          "regular": 27,
-          "promo": 22
+          "regular": 25,
+          "promo": 20
         },
         "10x10": {
           "regular": 80,
@@ -177,7 +177,7 @@
       },
       "scrapeStatus": "ok",
       "pricingFull": {},
-      "lastVerified": "2026-07-26 14:37 UTC"
+      "lastVerified": "2026-07-27 15:42 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -198,25 +198,17 @@
       ],
       "notes": "All units climate-controlled interior. 3-story building.",
       "pricing": {
-        "5x10": 66,
-        "10x10": 124,
+        "5x10": null,
+        "10x10": null,
         "10x15": 182,
         "10x20": null,
         "10x30": 234
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-26 14:37 UTC",
+      "lastVerified": "2026-07-27 15:43 UTC",
       "pricingFull": {
         "10x30": {
           "regular": 234,
-          "promo": null
-        },
-        "5x10": {
-          "regular": 66,
-          "promo": null
-        },
-        "10x10": {
-          "regular": 124,
           "promo": null
         },
         "10x15": {
@@ -249,7 +241,7 @@
         "10x20": 160,
         "10x30": 260
       },
-      "scrapeStatus": "ok",
+      "scrapeStatus": "failed",
       "lastVerified": "2026-07-26 14:37 UTC",
       "pricingFull": {
         "5x10": {
@@ -301,7 +293,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-26 14:37 UTC",
+      "lastVerified": "2026-07-27 15:43 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -1617,6 +1609,67 @@
         "Honea Egypt Self Storage": {
           "5x10": 66,
           "10x10": 124,
+          "10x15": 182,
+          "10x20": null,
+          "10x30": 234
+        },
+        "Montgomery Self Storage": {
+          "5x10": 60,
+          "10x10": 85,
+          "10x15": 140,
+          "10x20": 160,
+          "10x30": 260
+        },
+        "Woodlands Storage & Office": {
+          "5x10": null,
+          "10x10": 75,
+          "10x15": null,
+          "10x20": 175,
+          "10x30": 225
+        }
+      }
+    },
+    {
+      "date": "2026-07-27",
+      "my": {
+        "5x10": 30,
+        "10x10": 55,
+        "10x15": 100,
+        "10x20": 155,
+        "10x30": 280
+      },
+      "facilities": {
+        "Lockaway Storage": {
+          "5x10": 39,
+          "10x10": 40,
+          "10x15": 83,
+          "10x20": 83,
+          "10x30": 264
+        },
+        "Public Storage (FM 1488)": {
+          "5x10": 35,
+          "10x10": 67,
+          "10x15": 100,
+          "10x20": 108,
+          "10x30": null
+        },
+        "Public Storage (FM 2978)": {
+          "5x10": 20,
+          "10x10": 64,
+          "10x15": 117,
+          "10x20": 234,
+          "10x30": 194
+        },
+        "SmartStop Self Storage": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": null,
+          "10x20": null,
+          "10x30": null
+        },
+        "Honea Egypt Self Storage": {
+          "5x10": null,
+          "10x10": null,
           "10x15": 182,
           "10x20": null,
           "10x30": 234
