@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-30 15:12 UTC",
+  "lastUpdated": "2026-07-31 15:21 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": 264
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-30 15:10 UTC",
+      "lastVerified": "2026-07-31 15:19 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 52,
@@ -79,7 +79,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-30 15:10 UTC",
+      "lastVerified": "2026-07-31 15:19 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 55,
@@ -122,7 +122,7 @@
         "10x30": 186
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-30 15:10 UTC",
+      "lastVerified": "2026-07-31 15:20 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 26,
@@ -173,7 +173,7 @@
       },
       "scrapeStatus": "ok",
       "pricingFull": {},
-      "lastVerified": "2026-07-30 15:11 UTC"
+      "lastVerified": "2026-07-31 15:20 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -201,7 +201,7 @@
         "10x30": 234
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-30 15:11 UTC",
+      "lastVerified": "2026-07-31 15:20 UTC",
       "pricingFull": {
         "10x30": {
           "regular": 234,
@@ -231,25 +231,25 @@
       ],
       "notes": "Non-climate and climate options. Prices shown are non-climate.",
       "pricing": {
-        "5x10": 60,
-        "10x10": 85,
-        "10x15": 140,
+        "5x10": 55,
+        "10x10": 80,
+        "10x15": 145,
         "10x20": 160,
-        "10x30": 260
+        "10x30": 265
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-30 15:12 UTC",
+      "lastVerified": "2026-07-31 15:20 UTC",
       "pricingFull": {
         "5x10": {
-          "regular": 60,
+          "regular": 55,
           "promo": null
         },
         "10x10": {
-          "regular": 85,
+          "regular": 80,
           "promo": null
         },
         "10x15": {
-          "regular": 140,
+          "regular": 145,
           "promo": null
         },
         "10x20": {
@@ -257,7 +257,7 @@
           "promo": null
         },
         "10x30": {
-          "regular": 260,
+          "regular": 265,
           "promo": null
         }
       }
@@ -289,7 +289,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-07-30 15:12 UTC",
+      "lastVerified": "2026-07-31 15:21 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -1859,6 +1859,67 @@
           "10x15": 140,
           "10x20": 160,
           "10x30": 260
+        },
+        "Woodlands Storage & Office": {
+          "5x10": null,
+          "10x10": 75,
+          "10x15": null,
+          "10x20": 175,
+          "10x30": 225
+        }
+      }
+    },
+    {
+      "date": "2026-07-31",
+      "my": {
+        "5x10": 30,
+        "10x10": 55,
+        "10x15": 100,
+        "10x20": 155,
+        "10x30": 280
+      },
+      "facilities": {
+        "Lockaway Storage": {
+          "5x10": 39,
+          "10x10": 40,
+          "10x15": 83,
+          "10x20": 83,
+          "10x30": 264
+        },
+        "Public Storage (FM 1488)": {
+          "5x10": 42,
+          "10x10": null,
+          "10x15": 106,
+          "10x20": 123,
+          "10x30": null
+        },
+        "Public Storage (FM 2978)": {
+          "5x10": 21,
+          "10x10": 67,
+          "10x15": 117,
+          "10x20": 222,
+          "10x30": 186
+        },
+        "SmartStop Self Storage": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": null,
+          "10x20": null,
+          "10x30": null
+        },
+        "Honea Egypt Self Storage": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": 182,
+          "10x20": null,
+          "10x30": 234
+        },
+        "Montgomery Self Storage": {
+          "5x10": 55,
+          "10x10": 80,
+          "10x15": 145,
+          "10x20": 160,
+          "10x30": 265
         },
         "Woodlands Storage & Office": {
           "5x10": null,
