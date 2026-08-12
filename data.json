@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-12 04:13 UTC",
+  "lastUpdated": "2026-08-12 04:28 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": 264
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:12 UTC",
+      "lastVerified": "2026-08-12 04:27 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 52,
@@ -79,7 +79,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:12 UTC",
+      "lastVerified": "2026-08-12 04:27 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 62,
@@ -122,7 +122,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:12 UTC",
+      "lastVerified": "2026-08-12 04:27 UTC",
       "pricingFull": {
         "10x15": {
           "regular": 141,
@@ -149,15 +149,32 @@
       ],
       "notes": "Formerly Amazing Spaces; recently rebranded to SmartStop. Pricing is gated behind bot protection and cannot be read automatically. Call (281) 602-8910 for rates. Prices will appear here automatically if their site opens up to the daily scan.",
       "pricing": {
-        "5x10": null,
+        "5x10": 24,
         "10x10": null,
-        "10x15": null,
-        "10x20": null,
-        "10x30": null
+        "10x15": 68,
+        "10x20": 101,
+        "10x30": 148
       },
       "scrapeStatus": "ok",
-      "pricingFull": {},
-      "lastVerified": "2026-08-12 04:13 UTC"
+      "pricingFull": {
+        "5x10": {
+          "regular": 49,
+          "promo": 24
+        },
+        "10x15": {
+          "regular": 136,
+          "promo": 68
+        },
+        "10x20": {
+          "regular": 202,
+          "promo": 101
+        },
+        "10x30": {
+          "regular": 296,
+          "promo": 148
+        }
+      },
+      "lastVerified": "2026-08-12 04:27 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -185,7 +202,7 @@
         "10x30": 450
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:13 UTC",
+      "lastVerified": "2026-08-12 04:27 UTC",
       "pricingFull": {
         "10x15": {
           "regular": 182,
@@ -222,7 +239,7 @@
         "10x30": 265
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:13 UTC",
+      "lastVerified": "2026-08-12 04:28 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 55,
@@ -273,7 +290,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:13 UTC",
+      "lastVerified": "2026-08-12 04:28 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -2617,11 +2634,11 @@
           "10x30": null
         },
         "SmartStop Self Storage": {
-          "5x10": null,
+          "5x10": 24,
           "10x10": null,
-          "10x15": null,
-          "10x20": null,
-          "10x30": null
+          "10x15": 68,
+          "10x20": 101,
+          "10x30": 148
         },
         "Honea Egypt Self Storage": {
           "5x10": null,
