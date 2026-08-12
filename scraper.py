@@ -34,14 +34,18 @@ SCRAPER_API_KEY = os.environ.get("SCRAPER_API_KEY", "").strip()
 PROXY_HOSTS = ("montgomeryss.com",)
 
 
-def _via_scraper_api(url):
+def _via_scraper_api(url, premium=True, render=True):
     """
     Wrap a target URL in a ScraperAPI request. `premium=true` uses residential
     IPs — required for hosts (like Montgomery) that reset connections from
     datacenter IPs, which ScraperAPI's default proxy pool also uses.
+    Both flags cost credits, so callers that only need a plain HTML body from a
+    blocked host (Public Storage) start with premium=False/render=False.
     """
     return ("https://api.scraperapi.com/?api_key=" + SCRAPER_API_KEY
-            + "&premium=true&country_code=us&render=true"
+            + ("&premium=true" if premium else "")
+            + "&country_code=us"
+            + ("&render=true" if render else "")
             + "&url=" + quote(url, safe=""))
 
 SIZES = ["5x10", "10x10", "10x15", "10x20", "10x30"]
@@ -161,6 +165,41 @@ def fetch(url, timeout=45):
         return _fetch_static(url, timeout)
 
 
+def fetch_resilient(url, marker, timeout=45):
+    """
+    Fetch a page that must contain `marker` to be usable, trying progressively
+    more expensive routes and stopping at the first one that works:
+
+      1. plain HTTP GET        (free, works when the host isn't blocking us)
+      2. headless Chromium     (free, handles JS-rendered markup)
+      3. ScraperAPI standard   (1 credit, new IP)
+      4. ScraperAPI premium    (residential IP, last resort)
+
+    Public Storage serves its prices in the raw HTML, so step 1 usually wins;
+    the later steps only fire when the host starts refusing the CI runner,
+    which is what silently stalled both PS listings for eleven days.
+    """
+    attempts = [("static", lambda: _fetch_static(url, timeout)),
+                ("headless Chromium", lambda: fetch(url, timeout))]
+    if SCRAPER_API_KEY:
+        attempts.append(("ScraperAPI standard",
+                         lambda: _fetch_static(_via_scraper_api(url, premium=False, render=False), 90)))
+        attempts.append(("ScraperAPI premium",
+                         lambda: _fetch_static(_via_scraper_api(url, premium=True, render=False), 120)))
+
+    for label, attempt in attempts:
+        try:
+            html = attempt()
+        except Exception as e:
+            print(f"  {label} fetch raised: {e}")
+            continue
+        if html and marker in html:
+            print(f"  fetched via {label} ({len(html)} bytes)")
+            return html
+        print(f"  {label} fetch unusable (marker '{marker}' missing)")
+    return None
+
+
 def strip_tags(html):
     """Crude HTML-to-text so card segmentation follows what a human sees."""
     text = re.sub(r"<script[\s\S]*?</script>", " ", html, flags=re.I)
@@ -244,50 +283,73 @@ def scrape_lockaway(url):
     return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
+PS_UNIT_RE = re.compile(
+    r"Unit Size\s*(\d{1,2})\s*'?\s*x\s*(\d{1,2})\s*'?\s*Online price\s*\$\s*(\d+(?:\.\d{1,2})?)")
+PS_INSTORE_RE = re.compile(r"In[-\s]?Store Rent\s*\$\s*(\d+(?:\.\d{1,2})?)", re.I)
+PS_CLIMATE_RE = re.compile(r"climate\s*controlled", re.I)
+PS_PARKING_RE = re.compile(r"uncovered|RV,\s*Boat,\s*or\s*Vehicle|Parking\s*\d", re.I)
+
+# Public Storage sells odd dimensions (5x9, 7x19, 10x19, 15x14...). Map each to
+# the nearest Magnolia size by floor area instead of maintaining an endless
+# lookup table that goes stale every time PS relabels a unit. Gaps between the
+# bands (e.g. 5x14 = 70 sq ft) are deliberately left unmapped rather than being
+# forced into a size they do not really compare to.
+PS_AREA_BANDS = [("5x10", 40, 62), ("10x10", 85, 115),
+                 ("10x15", 130, 170), ("10x20", 180, 225), ("10x30", 270, 330)]
+
+
+def ps_size_key(a, b):
+    lo, hi = sorted((a, b))
+    if lo < 5 or lo > 15:
+        return None
+    area = lo * hi
+    for size, low, high in PS_AREA_BANDS:
+        if low <= area <= high:
+            return size
+    return None
+
+
 def scrape_public_storage(url, facility_name):
     """
-    Public Storage: full unit cards carry a Features list and both an
-    online-only rate and an in-store rate. Use the online rate per size.
-    EXCLUDE uncovered parking listings.
+    Public Storage: each unit block starts with "Unit Size N'xM' Online price
+    $X" and carries its feature list plus the "In-Store Rent $Y" regular rate.
+    Prices are server-rendered, so this parses the raw HTML and never depends
+    on a JS render.
+
+    Only DRIVE-UP enclosed units are recorded — climate-controlled interior
+    units and uncovered RV/boat parking are different products and were
+    previously being mixed into the same size buckets (both PS listings had
+    climate rates masquerading as drive-up comparisons).
     """
-    html = fetch(url)
+    html = fetch_resilient(url, "Online price")
     if html is None:
         return None, "failed"
-    if "$" not in html:
+
+    text = strip_tags(html)
+    matches = list(PS_UNIT_RE.finditer(text))
+    if not matches:
         return None, "blocked"
 
-    ps_map = {
-        "5x9": "5x10", "5x10": "5x10", "5x14": "5x10", "5x15": "5x10",
-        "7x14": "10x10", "8x14": "10x10", "10x10": "10x10",
-        "10x15": "10x15", "7x19": "10x15",
-        "10x19": "10x20", "10x20": "10x20",
-        "10x30": "10x30",
-    }
     size_prices = {}
     size_full = {}
-    for key, card, prefix in segment_cards(html):
-        mapped = ps_map.get(key)
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else min(len(text), m.end() + 900)
+        block = text[m.start():end]
+        if PS_PARKING_RE.search(block):
+            continue  # uncovered RV/boat/vehicle space, not an enclosed unit
+        if PS_CLIMATE_RE.search(block):
+            continue  # interior climate unit, not comparable to our drive-up
+        if "Drive up access" not in block:
+            continue
+        mapped = ps_size_key(int(m.group(1)), int(m.group(2)))
         if not mapped:
             continue
-        # Only full unit cards carry a "Features" list; the page also renders
-        # bare summary rows (dimension + price, no features). Summary rows are
-        # skipped because they cannot be checked for the Uncovered/parking flag.
-        if "Features" not in card:
-            continue
-        if PARKING_RE.search(card):
-            continue  # "Uncovered" = a parking space, not an enclosed unit
-        # Capture both figures: online-only (promo) and in-store (regular).
-        mo = re.search(r"Online[\s-]*(?:Only)?\s*[Pp]rice\s*\$\s*(\d+(?:\.\d{1,2})?)", card)
-        mi = re.search(r"In\s*Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
-        eff = mo or mi
-        if eff:
-            val = round(float(eff.group(1)))
-            if mapped not in size_prices or val < size_prices[mapped]:
-                size_prices[mapped] = val
-                size_full[mapped] = {
-                    "regular": round(float(mi.group(1))) if mi else val,
-                    "promo": round(float(mo.group(1))) if mo else None,
-                }
+        online = round(float(m.group(3)))
+        mi = PS_INSTORE_RE.search(block)
+        regular = round(float(mi.group(1))) if mi else online
+        if mapped not in size_prices or online < size_prices[mapped]:
+            size_prices[mapped] = online
+            size_full[mapped] = {"regular": regular, "promo": online}
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
