@@ -414,69 +414,72 @@ def _extract_json_data(html):
     return None
 
 
+SMARTSTOP_UNITS_API = ("https://smartstopselfstorage.com/umbraco/rhythm/locationsapi/"
+                       "GetUnits?facilityIds={fid}&culture=en-US")
+SMARTSTOP_FACILITY_ID = "1100006149"   # 32620 FM 2978, Magnolia (store code 6149)
+SMARTSTOP_FID_RE = re.compile(r'"locationIds"\s*:\s*\[\s*(\d+)')
+SMARTSTOP_DRIVEUP_RE = re.compile(r"drive-?up", re.I)
+
+
 def scrape_smartstop(url):
     """
-    SmartStop is an Umbraco site that ships unit data inside a `window.JSON_DATA`
-    blob rather than the rendered DOM. Read locationDetail.location.units[] and
-    take the lowest online (web) rate per size. When the location has no online
-    units (units == []), it shows a "call for availability" message — report OK
-    with no prices instead of pretending old numbers are current.
-    Falls back to the legacy 'In-Store $' regex if the blob isn't present.
+    SmartStop renders an empty units array in the initial HTML and fills it in
+    from an Umbraco endpoint after load, which is why scraping the page (with or
+    without a JS render) always came back with nothing and the facility looked
+    like it had no online inventory.
+
+    This calls that endpoint directly. It needs no browser, returns clean JSON
+    with both the web rate and the in-store rate, and flags each unit's features
+    so DRIVE-UP units can be separated from climate-controlled interior ones.
     """
-    html = fetch(url)
-    if html is None:
+    facility_id = SMARTSTOP_FACILITY_ID
+    page = _fetch_static(url, 30)
+    if page:
+        m = SMARTSTOP_FID_RE.search(page)
+        if m:
+            facility_id = m.group(1)
+
+    raw = _fetch_static(SMARTSTOP_UNITS_API.format(fid=facility_id), 45)
+    if not raw:
+        return None, "failed"
+    try:
+        units = json.loads(raw)
+    except Exception as e:
+        print(f"  WARNING: SmartStop units API did not return JSON: {e}")
+        return None, "failed"
+    if not isinstance(units, list):
         return None, "failed"
 
-    data = _extract_json_data(html)
-    if data is not None:
-        loc = (data.get("locationDetail") or {}).get("location") or {}
-        units = loc.get("units") or []
-        size_prices, size_full = {}, {}
-        for u in units:
-            if not isinstance(u, dict):
-                continue
-            w = u.get("width") or u.get("unitWidth")
-            l = u.get("length") or u.get("unitLength")
-            key = None
-            if w and l:
-                lo, hi = sorted((int(float(w)), int(float(l))))
-                key = f"{lo}x{hi}"
-            else:
-                nm = str(u.get("size") or u.get("unitTypeName") or u.get("name") or "")
-                dm = DIM_RE.search(nm)
-                if dm:
-                    lo, hi = sorted((int(dm.group(1)), int(dm.group(2))))
-                    key = f"{lo}x{hi}"
-            if key not in SIZES:
-                continue
-            web = (u.get("webRate") or u.get("pushRate") or u.get("onlineRate")
-                   or u.get("rate") or u.get("price"))
-            if web is None:
-                continue
-            web = round(float(web))
-            std = u.get("standardRate") or u.get("streetRate") or u.get("inStoreRate") or web
-            if key not in size_prices or web < size_prices[key]:
-                size_prices[key] = web
-                size_full[key] = {"regular": round(float(std)), "promo": web if web < float(std) else None}
-        pricing = empty_pricing()
-        pricing.update(size_prices)
-        # units==[] is a legitimate "call for availability" state, still a
-        # successful read — just no comparable online prices right now.
-        return {"pricing": pricing, "pricingFull": size_full}, "ok"
-
-    # Legacy fallback (older markup with visible In-Store prices).
-    if "$" not in html:
-        return None, "blocked"
-    size_prices = {}
-    for key, card, prefix in segment_cards(html):
+    size_prices, size_full = {}, {}
+    for u in units:
+        if not isinstance(u, dict):
+            continue
+        features = " ".join(str(f.get("name", "")) for f in (u.get("features") or [])
+                            if isinstance(f, dict))
+        if not SMARTSTOP_DRIVEUP_RE.search(features):
+            continue  # climate interior / wine storage, not comparable
+        w, l = u.get("width"), u.get("length")
+        if w is None or l is None:
+            continue
+        if float(w) != int(float(w)) or float(l) != int(float(l)):
+            continue  # half-foot sizes (7.5x10) have no equivalent here
+        lo, hi = sorted((int(float(w)), int(float(l))))
+        key = f"{lo}x{hi}"
         if key not in SIZES:
             continue
-        m = re.search(r"In-?Store\s*\$\s*(\d+(?:\.\d{1,2})?)", card, re.I)
-        if m:
-            keep_lowest(size_prices, key, round(float(m.group(1))))
+        web = u.get("webRateIncludingDiscount") or u.get("webRate")
+        store = u.get("storeRate") or web
+        if web is None:
+            continue
+        web, store = round(float(web)), round(float(store))
+        if key not in size_prices or web < size_prices[key]:
+            size_prices[key] = web
+            size_full[key] = {"regular": store, "promo": web}
+
     pricing = empty_pricing()
     pricing.update(size_prices)
-    return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
+    # An empty list is a real "call for availability" state, not a failure.
+    return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
 def scrape_honea_egypt(url):
