@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-12 04:28 UTC",
+  "lastUpdated": "2026-08-12 14:20 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": 264
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:27 UTC",
+      "lastVerified": "2026-08-12 14:20 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 52,
@@ -72,26 +72,26 @@
       ],
       "notes": "Non-standard sizes; closest equivalents shown at online rates. 10x30 offered as uncovered RV parking only (excluded). $1 first month promo. Admin fee: $29.",
       "pricing": {
-        "5x10": 37,
+        "5x10": 29,
         "10x10": null,
-        "10x15": 106,
-        "10x20": 142,
+        "10x15": 104,
+        "10x20": 139,
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:27 UTC",
+      "lastVerified": "2026-08-12 14:20 UTC",
       "pricingFull": {
         "5x10": {
-          "regular": 62,
-          "promo": 37
+          "regular": 49,
+          "promo": 29
         },
         "10x15": {
-          "regular": 131,
-          "promo": 106
+          "regular": 124,
+          "promo": 104
         },
         "10x20": {
-          "regular": 172,
-          "promo": 142
+          "regular": 232,
+          "promo": 139
         }
       },
       "promoNote": "Online-only rate; $1 first month promo, $29 admin fee"
@@ -117,16 +117,16 @@
       "pricing": {
         "5x10": null,
         "10x10": null,
-        "10x15": 113,
+        "10x15": 110,
         "10x20": null,
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:27 UTC",
+      "lastVerified": "2026-08-12 14:20 UTC",
       "pricingFull": {
         "10x15": {
-          "regular": 141,
-          "promo": 113
+          "regular": 138,
+          "promo": 110
         }
       },
       "promoNote": "Online-only rate; $1 first month promo, $29 admin fee"
@@ -174,7 +174,7 @@
           "promo": 148
         }
       },
-      "lastVerified": "2026-08-12 04:27 UTC"
+      "lastVerified": "2026-08-12 14:20 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -202,7 +202,7 @@
         "10x30": 450
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:27 UTC",
+      "lastVerified": "2026-08-12 14:20 UTC",
       "pricingFull": {
         "10x15": {
           "regular": 182,
@@ -239,7 +239,7 @@
         "10x30": 265
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:28 UTC",
+      "lastVerified": "2026-08-12 14:20 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 55,
@@ -290,7 +290,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-08-12 04:28 UTC",
+      "lastVerified": "2026-08-12 14:20 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -2620,16 +2620,16 @@
           "10x30": 264
         },
         "Public Storage (FM 1488)": {
-          "5x10": 37,
+          "5x10": 29,
           "10x10": null,
-          "10x15": 106,
-          "10x20": 142,
+          "10x15": 104,
+          "10x20": 139,
           "10x30": null
         },
         "Public Storage (FM 2978)": {
           "5x10": null,
           "10x10": null,
-          "10x15": 113,
+          "10x15": 110,
           "10x20": null,
           "10x30": null
         },
