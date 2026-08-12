@@ -250,33 +250,55 @@ def keep_lowest(size_prices, key, val):
 # --- Scrapers ----------------------------------------------------------------
 # Each scraper returns (pricing_dict, status) where status is "ok"|"blocked"|"failed".
 
+LOCKAWAY_DRIVEUP_RE = re.compile(r"Drive-Up", re.I)
+LOCKAWAY_CLIMATE_RE = re.compile(r"Climate\s*Controlled", re.I)
+LOCKAWAY_LEAD_DIM_RE = re.compile(r"\s*(\d{1,2})\s*'?\s*[xX\u00d7]\s*(\d{1,2})")
+
+# 12x30 is Lockaway's only drive-up unit anywhere near a 10x30, so it stands in
+# as the closest equivalent. The 8-foot-wide sizes are all climate interior and
+# are filtered out anyway.
+LOCKAWAY_MAP = {"5x10": "5x10", "10x10": "10x10", "10x15": "10x15",
+                "10x20": "10x20", "10x30": "10x30", "12x30": "10x30"}
+
+
 def scrape_lockaway(url):
-    """Lockaway: multiple cards per size; use lowest advertised (online/starting)."""
+    """
+    Lockaway: several cards per size. Only DRIVE-UP cards are comparable to our
+    units, so climate-controlled interior cards are skipped rather than being
+    allowed to win on price (a climate 10x15 promo at $83 was being reported as
+    the 10x15 drive-up rate).
+
+    Lockaway also lists a cheaper "15 x 10" alongside the real "10 x 15". Both
+    normalise to the same key, so cards whose dimensions are written in the same
+    order as the size we are pricing win over reversed variants; price only
+    breaks ties within the same orientation.
+    """
     html = fetch(url)
     if html is None:
         return None, "failed"
     if "$" not in html:
         return None, "blocked"
 
-    lockaway_map = {
-        "5x10": "5x10", "8x10": "5x10",
-        "10x10": "10x10",
-        "10x15": "10x15", "8x15": "10x15",
-        "10x20": "10x20", "8x20": "10x20",
-        "10x30": "10x30", "12x30": "10x30",
-    }
+    best = {}      # size -> (rank, promo)
     size_prices = {}
     size_full = {}
     for key, card, prefix in segment_cards(html):
-        mapped = lockaway_map.get(key)
+        mapped = LOCKAWAY_MAP.get(key)
         if not mapped:
             continue
+        if LOCKAWAY_CLIMATE_RE.search(card) or not LOCKAWAY_DRIVEUP_RE.search(card):
+            continue
         prices = card_prices(card)
-        if prices:
-            promo, regular = prices[0], prices[-1]
-            if mapped not in size_prices or promo < size_prices[mapped]:
-                size_prices[mapped] = promo
-                size_full[mapped] = {"regular": regular, "promo": promo}
+        if not prices:
+            continue
+        lead = LOCKAWAY_LEAD_DIM_RE.match(card)
+        literal = f"{int(lead.group(1))}x{int(lead.group(2))}" if lead else key
+        rank = 0 if literal == mapped else 1
+        promo, regular = prices[0], prices[-1]
+        if mapped not in best or (rank, promo) < best[mapped]:
+            best[mapped] = (rank, promo)
+            size_prices[mapped] = promo
+            size_full[mapped] = {"regular": regular, "promo": promo}
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
