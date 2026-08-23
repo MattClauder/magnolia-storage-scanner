@@ -375,7 +375,7 @@ def scrape_public_storage(url, facility_name):
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
-    return {"pricing": pricing, "pricingFull": size_full}, "ok"
+    return {"pricing": pricing, "pricingFull": size_full, "verifiedEmpty": not size_prices}, "ok"
 
 
 def _extract_json_data(html):
@@ -638,7 +638,7 @@ def main():
 
         all_null = all(v is None for v in new_pricing.values())
         had_data = any(v is not None for v in old_pricing.values())
-        if all_null and had_data:
+        if all_null and had_data and not result.get("verifiedEmpty"):
             print("  WARNING: scrape parsed zero prices; keeping old data, marked unverified")
             entry["scrapeStatus"] = "failed"
             continue
