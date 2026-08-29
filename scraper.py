@@ -252,7 +252,6 @@ def keep_lowest(size_prices, key, val):
 
 LOCKAWAY_DRIVEUP_RE = re.compile(r"Drive-Up", re.I)
 LOCKAWAY_CLIMATE_RE = re.compile(r"Climate\s*Controlled", re.I)
-LOCKAWAY_LEAD_DIM_RE = re.compile(r"\s*(\d{1,2})\s*'?\s*[xX\u00d7]\s*(\d{1,2})")
 
 # 12x30 is Lockaway's only drive-up unit anywhere near a 10x30, so it stands in
 # as the closest equivalent. The 8-foot-wide sizes are all climate interior and
@@ -268,10 +267,12 @@ def scrape_lockaway(url):
     allowed to win on price (a climate 10x15 promo at $83 was being reported as
     the 10x15 drive-up rate).
 
-    Lockaway also lists a cheaper "15 x 10" alongside the real "10 x 15". Both
-    normalise to the same key, so cards whose dimensions are written in the same
-    order as the size we are pricing win over reversed variants; price only
-    breaks ties within the same orientation.
+    Lockaway lists a cheaper "15 x 10" alongside the "10 x 15". Both are 150
+    sq ft drive-up units with identical features, so the cheaper one is what a
+    customer shopping that size actually pays -- the dashboard exists to answer
+    "what does this competitor charge for this size", and preferring the
+    same-orientation label reported $133 when $104 was on the shelf. Lowest
+    drive-up price per size wins regardless of how the dimensions are written.
     """
     html = fetch(url)
     if html is None:
@@ -279,7 +280,6 @@ def scrape_lockaway(url):
     if "$" not in html:
         return None, "blocked"
 
-    best = {}      # size -> (rank, promo)
     size_prices = {}
     size_full = {}
     for key, card, prefix in segment_cards(html):
@@ -291,12 +291,8 @@ def scrape_lockaway(url):
         prices = card_prices(card)
         if not prices:
             continue
-        lead = LOCKAWAY_LEAD_DIM_RE.match(card)
-        literal = f"{int(lead.group(1))}x{int(lead.group(2))}" if lead else key
-        rank = 0 if literal == mapped else 1
         promo, regular = prices[0], prices[-1]
-        if mapped not in best or (rank, promo) < best[mapped]:
-            best[mapped] = (rank, promo)
+        if mapped not in size_prices or promo < size_prices[mapped]:
             size_prices[mapped] = promo
             size_full[mapped] = {"regular": regular, "promo": promo}
 
