@@ -305,8 +305,12 @@ def scrape_lockaway(url):
     return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
+# PS labels some units with half-foot dimensions ("7.5'x14'", "12.5'x25'"). The
+# dimension groups must accept a decimal or those listings never match at all --
+# FM 1488's 7.5x14 drive-up (105 sq ft, a real 10x10 comparable at $55 online)
+# was being dropped silently, leaving that size blank on the dashboard.
 PS_UNIT_RE = re.compile(
-    r"Unit Size\s*(\d{1,2})\s*'?\s*x\s*(\d{1,2})\s*'?\s*Online price\s*\$\s*(\d+(?:\.\d{1,2})?)")
+    r"Unit Size\s*(\d{1,2}(?:\.\d)?)\s*'?\s*x\s*(\d{1,2}(?:\.\d)?)\s*'?\s*Online price\s*\$\s*(\d+(?:\.\d{1,2})?)")
 PS_INSTORE_RE = re.compile(r"In[-\s]?Store Rent\s*\$\s*(\d+(?:\.\d{1,2})?)", re.I)
 PS_CLIMATE_RE = re.compile(r"climate\s*controlled", re.I)
 PS_PARKING_RE = re.compile(r"uncovered|RV,\s*Boat,\s*or\s*Vehicle|Parking\s*\d", re.I)
@@ -321,7 +325,8 @@ PS_AREA_BANDS = [("5x10", 40, 62), ("10x10", 85, 115),
 
 
 def ps_size_key(a, b):
-    lo, hi = sorted((a, b))
+    """Nearest tracked size by floor area. Accepts half-foot dimensions."""
+    lo, hi = sorted((float(a), float(b)))
     if lo < 5 or lo > 15:
         return None
     area = lo * hi
@@ -363,7 +368,7 @@ def scrape_public_storage(url, facility_name):
             continue  # interior climate unit, not comparable to our drive-up
         if "Drive up access" not in block:
             continue
-        mapped = ps_size_key(int(m.group(1)), int(m.group(2)))
+        mapped = ps_size_key(m.group(1), m.group(2))
         if not mapped:
             continue
         online = round(float(m.group(3)))
@@ -483,7 +488,16 @@ def scrape_smartstop(url):
 
 
 def scrape_honea_egypt(url):
-    """Honea Egypt: '$82.00/month' near dimensions; reversed dims normalized."""
+    """
+    Honea Egypt: '$82.00/month' near dimensions; reversed dims normalized.
+
+    Honea only lists units it currently has available, so a run that finds
+    priced units but none in a size we track is a real "sold out of everything
+    comparable" state, not a parse failure. Report that as verifiedEmpty so the
+    caller records honest nulls; without it, a sold-out facility trips the
+    keep-old-data branch and reads "failed" forever while the dashboard keeps
+    advertising rates nobody can actually rent.
+    """
     html = fetch(url)
     if html is None:
         return None, "failed"
@@ -491,16 +505,21 @@ def scrape_honea_egypt(url):
         return None, "blocked"
 
     size_prices = {}
+    saw_priced_unit = False
     for key, card, prefix in segment_cards(html):
+        m = re.search(r"\$\s*(\d+(?:\.\d{1,2})?)\s*/?\s*month", card, re.I)
+        if not m:
+            continue
+        saw_priced_unit = True  # listing rendered; this size just isn't tracked
         if key not in SIZES:
             continue
-        m = re.search(r"\$\s*(\d+(?:\.\d{1,2})?)\s*/?\s*month", card, re.I)
-        if m:
-            keep_lowest(size_prices, key, round(float(m.group(1))))
+        keep_lowest(size_prices, key, round(float(m.group(1))))
 
     pricing = empty_pricing()
     pricing.update(size_prices)
-    return {"pricing": pricing, "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()}}, "ok"
+    return {"pricing": pricing,
+            "pricingFull": {s: {"regular": p, "promo": None} for s, p in size_prices.items()},
+            "verifiedEmpty": saw_priced_unit and not size_prices}, "ok"
 
 
 # Montgomery unit prices are formatted "$260.00/mo"; its promo banner uses

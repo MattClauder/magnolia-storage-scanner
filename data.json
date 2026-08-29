@@ -142,7 +142,7 @@
         "Admin Fee $29",
         "Indoor Units"
       ],
-      "notes": "Formerly Amazing Spaces; recently rebranded to SmartStop. Pricing is gated behind bot protection and cannot be read automatically. Call (281) 602-8910 for rates. Prices will appear here automatically if their site opens up to the daily scan.",
+      "notes": "Formerly Amazing Spaces; rebranded to SmartStop. Rates read directly from their units API. Drive-up rates shown; their 10x10 is climate-controlled interior only, so it is not a comparable.",
       "pricing": {
         "5x10": 24,
         "10x10": null,
