@@ -619,8 +619,8 @@ function renderChart() {
         <div class="bar-label">${label}</div>
         <div class="bar-track">
           <div class="bar-fill ${cls}" style="width:${pct}%">${e.promo
-            ? `<span style="text-decoration:line-through;opacity:0.55;font-weight:400;margin-right:8px;" title="Regular rate">$${e.price}</span>$${e.promo}/mo`
-            : `$${e.price}/mo`}</div>
+            ? `<span style="text-decoration:line-through;opacity:0.55;font-weight:400;margin-right:8px;" title="Regular rate">$${e.price}</span>$${e.promo}`
+            : `$${e.price}`}</div>
         </div>
       </div>`;
   });
