@@ -433,7 +433,7 @@ async function loadData() {
     const okCount = scanned.filter(c => c.scrapeStatus === 'ok').length;
     const staleCount = scanned.length - okCount;
     let badge = '<span class="loading-badge">Live</span>';
-    const flagged = data.flagCount || 0;
+    const flagged = fullData.flagCount || 0;
     if (staleCount > 0 || flagged > 0) {
       const bits = [];
       if (staleCount > 0) bits.push(okCount + '/' + scanned.length + ' verified &middot; ' + staleCount + ' stale');
@@ -444,10 +444,17 @@ async function loadData() {
   } catch (e) {
     console.log('Could not load data.json, using fallback data:', e.message);
     competitors = FALLBACK_COMPETITORS;
-    // Set fallback pricing
-    const fallbackPricing = {"5x10":25,"10x10":87,"10x15":115,"10x20":165,"10x30":280};
-    unitSizes.forEach(s => { document.getElementById('my-' + s).value = fallbackPricing[s]; });
-    document.getElementById('lastUpdated').textContent = 'Using cached data (data.json unavailable)';
+    // Deliberately do NOT populate the pricing editor from fallback values.
+    // It used to seed them with hardcoded demo numbers, so any later save wrote
+    // those demo numbers into data.json over the real rates. That is how a stray
+    // ReferenceError in this function silently replaced myPricing with 25/87/115.
+    // Leave the fields blank, disable saving, and say plainly that this is not live.
+    unitSizes.forEach(s => {
+      const el = document.getElementById('my-' + s);
+      if (el) { el.value = ''; el.placeholder = 'unavailable'; el.disabled = true; }
+    });
+    document.getElementById('lastUpdated').innerHTML =
+      '<span style="color:#b45309;font-weight:600;">&#9888; Could not load live data. Showing sample competitor figures. Pricing editor disabled so it cannot overwrite your real rates.</span>';
   }
   // Fade in pricing editor now that values are loaded
   document.getElementById('pricingEditor').style.opacity = '1';
