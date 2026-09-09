@@ -2,7 +2,10 @@ name: Daily Price Scrape
 
 on:
   schedule:
-    - cron: '0 13 * * *'
+    # Every 3 hours. Competitors reprice during the day (Lockaway moved all five
+    # sizes between the 12:05pm scan and 5pm on Sep 8), so a once-daily scan was
+    # stale most of the time you looked at it.
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -20,9 +23,24 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Montgomery is fetched through ScraperAPI, which costs credits per call.
+      # It is hand-priced and unchanged for weeks, so only the 13:00 UTC run
+      # (8am CDT) pays for it; the other seven runs skip it and cost nothing.
+      - name: Decide scan scope
+        id: scope
+        run: |
+          if [ "$(date -u +%H)" = "13" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "skip_proxy=" >> "$GITHUB_OUTPUT"
+            echo "Full scan (includes proxied hosts)"
+          else
+            echo "skip_proxy=1" >> "$GITHUB_OUTPUT"
+            echo "Light scan (skips proxied hosts)"
+          fi
+
       - name: Run scraper
         env:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
+          SKIP_PROXY_HOSTS: ${{ steps.scope.outputs.skip_proxy }}
         run: python scraper.py
 
       - name: Commit and push if changed
@@ -30,5 +48,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git diff --staged --quiet || git commit -m "Auto-update competitor pricing $(date -u '+%Y-%m-%d')"
+          git diff --staged --quiet || git commit -m "Auto-update competitor pricing $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
