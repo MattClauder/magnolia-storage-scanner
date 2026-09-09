@@ -33,6 +33,80 @@ from urllib.parse import quote
 SCRAPER_API_KEY = os.environ.get("SCRAPER_API_KEY", "").strip()
 PROXY_HOSTS = ("montgomeryss.com",)
 
+# Set on the frequent intra-day runs so they skip PROXY_HOSTS and cost nothing.
+SKIP_PROXY_HOSTS = os.environ.get("SKIP_PROXY_HOSTS", "").strip() not in ("", "0", "false")
+
+# --- Plausibility checks -----------------------------------------------------
+# Every scrape used to come back "ok" whether the number was right or not, so a
+# 10x15 sat 40% below reality for days behind a green status. These do not block
+# or rewrite anything; they attach a flag the dashboard can show, because a wrong
+# number that announces itself is worth far more than a silent one.
+
+JUMP_PCT = 0.25       # run-over-run move that deserves a second look
+LOW_MULT = 0.55       # below this share of the peer median for the size
+HIGH_MULT = 1.80      # above this multiple of the peer median
+
+
+def _median(vals):
+    v = sorted(vals)
+    n = len(v)
+    if not n:
+        return None
+    return v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
+
+
+def flag_pricing(competitors):
+    """
+    Attach `flags` per competitor: sizes whose value moved sharply since the last
+    run, or that sit far off the median of everyone else selling that size.
+    Returns a flat list of human-readable strings for the run log.
+    """
+    by_size = {s: [] for s in SIZES}
+    for c in competitors:
+        if c.get("scrapeStatus") == "n/a":
+            continue
+        for s in SIZES:
+            v = (c.get("pricing") or {}).get(s)
+            if v is not None:
+                by_size[s].append((c["name"], v))
+
+    notes = []
+    for c in competitors:
+        if c.get("scrapeStatus") == "n/a":
+            continue
+        flags = {}
+        prev = c.get("_prevPricing") or {}
+        for s in SIZES:
+            v = (c.get("pricing") or {}).get(s)
+            if v is None:
+                continue
+            reasons = []
+
+            p = prev.get(s)
+            if p:
+                delta = (v - p) / p
+                if abs(delta) >= JUMP_PCT:
+                    reasons.append(f"moved {delta:+.0%} since last run (was ${p})")
+
+            peers = [x for n, x in by_size[s] if n != c["name"]]
+            med = _median(peers)
+            if med and len(peers) >= 2:
+                if v < med * LOW_MULT:
+                    reasons.append(f"{1 - v / med:.0%} below the ${med:.0f} median for {s}")
+                elif v > med * HIGH_MULT:
+                    reasons.append(f"{v / med - 1:.0%} above the ${med:.0f} median for {s}")
+
+            if reasons:
+                flags[s] = reasons
+                notes.append(f"  {c['name']} {s} ${v}: " + "; ".join(reasons))
+
+        if flags:
+            c["flags"] = flags
+        else:
+            c.pop("flags", None)
+        c.pop("_prevPricing", None)
+    return notes
+
 
 def _via_scraper_api(url, premium=True, render=True):
     """
@@ -253,11 +327,13 @@ def keep_lowest(size_prices, key, val):
 LOCKAWAY_DRIVEUP_RE = re.compile(r"Drive-Up", re.I)
 LOCKAWAY_CLIMATE_RE = re.compile(r"Climate\s*Controlled", re.I)
 
-# 12x30 is Lockaway's only drive-up unit anywhere near a 10x30, so it stands in
-# as the closest equivalent. The 8-foot-wide sizes are all climate interior and
-# are filtered out anyway.
+# 12x30 used to stand in for a 10x30 here. It should not: that card is a 360 sq ft
+# bay with a 14' tall door and a power outlet, an RV/boat bay rather than a storage
+# unit, and quoting it as a 10x30 compared a vehicle bay against our drive-up 10x30.
+# Lockaway's only real 10x30 is climate interior, which the climate filter drops, so
+# this size is legitimately blank for them. The 8-foot-wide sizes are climate too.
 LOCKAWAY_MAP = {"5x10": "5x10", "10x10": "10x10", "10x15": "10x15",
-                "10x20": "10x20", "10x30": "10x30", "12x30": "10x30"}
+                "10x20": "10x20", "10x30": "10x30"}
 
 
 def scrape_lockaway(url):
@@ -268,11 +344,14 @@ def scrape_lockaway(url):
     the 10x15 drive-up rate).
 
     Lockaway lists a cheaper "15 x 10" alongside the "10 x 15". Both are 150
-    sq ft drive-up units with identical features, so the cheaper one is what a
-    customer shopping that size actually pays -- the dashboard exists to answer
-    "what does this competitor charge for this size", and preferring the
-    same-orientation label reported $133 when $104 was on the shelf. Lowest
-    drive-up price per size wins regardless of how the dimensions are written.
+    sq ft drive-up units, so orientation is ignored and either can win.
+
+    Cards are ranked by REGULAR rate, not by the lowest number on the card. Some
+    cards carry a "40% off 4 months" teaser and some do not, so ranking by lowest
+    advertised figure compared a promo against a full rate and picked the promo:
+    a 10x15 read as $70 when both drive-up 10x15 cards settle at $117/mo once the
+    teaser lapses. Regular is the rate a tenant actually pays, so it decides the
+    winner and it is what `pricing` reports; the teaser is kept in pricingFull.
     """
     html = fetch(url)
     if html is None:
@@ -292,8 +371,8 @@ def scrape_lockaway(url):
         if not prices:
             continue
         promo, regular = prices[0], prices[-1]
-        if mapped not in size_prices or promo < size_prices[mapped]:
-            size_prices[mapped] = promo
+        if mapped not in size_prices or regular < size_prices[mapped]:
+            size_prices[mapped] = regular
             size_full[mapped] = {"regular": regular, "promo": promo}
 
     pricing = empty_pricing()
@@ -309,7 +388,14 @@ PS_UNIT_RE = re.compile(
     r"Unit Size\s*(\d{1,2}(?:\.\d)?)\s*'?\s*x\s*(\d{1,2}(?:\.\d)?)\s*'?\s*Online price\s*\$\s*(\d+(?:\.\d{1,2})?)")
 PS_INSTORE_RE = re.compile(r"In[-\s]?Store Rent\s*\$\s*(\d+(?:\.\d{1,2})?)", re.I)
 PS_CLIMATE_RE = re.compile(r"climate\s*controlled", re.I)
-PS_PARKING_RE = re.compile(r"uncovered|RV,\s*Boat,\s*or\s*Vehicle|Parking\s*\d", re.I)
+# Open-air spaces are never units, whatever else the card says.
+PS_OPEN_PARKING_RE = re.compile(r"uncovered|parking\s*space\s*only", re.I)
+# A vehicle tag alone does NOT disqualify a listing: PS tags enclosed drive-up
+# units "RV, Boat, Or Vehicle" too, and the old filter dropped them on that tag
+# alone -- hiding FM 2978's enclosed 10x30 at $250 in-store, a real comparable.
+# Treat a vehicle tag as parking only when the card is not marked Enclosed.
+PS_VEHICLE_RE = re.compile(r"RV,\s*Boat,\s*or\s*Vehicle|Vehicle\s*Parking|Parking\s*\d", re.I)
+PS_ENCLOSED_RE = re.compile(r"\bEnclosed\b", re.I)
 
 # Public Storage sells odd dimensions (5x9, 7x19, 10x19, 15x14...). Map each to
 # the nearest Magnolia size by floor area instead of maintaining an endless
@@ -358,8 +444,10 @@ def scrape_public_storage(url, facility_name):
     for i, m in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else min(len(text), m.end() + 900)
         block = text[m.start():end]
-        if PS_PARKING_RE.search(block):
-            continue  # uncovered RV/boat/vehicle space, not an enclosed unit
+        if PS_OPEN_PARKING_RE.search(block):
+            continue  # open-air space, never a unit
+        if PS_VEHICLE_RE.search(block) and not PS_ENCLOSED_RE.search(block):
+            continue  # vehicle space that is not an enclosed unit
         if PS_CLIMATE_RE.search(block):
             continue  # interior climate unit, not comparable to our drive-up
         if "Drive up access" not in block:
@@ -370,8 +458,10 @@ def scrape_public_storage(url, facility_name):
         online = round(float(m.group(3)))
         mi = PS_INSTORE_RE.search(block)
         regular = round(float(mi.group(1))) if mi else online
-        if mapped not in size_prices or online < size_prices[mapped]:
-            size_prices[mapped] = online
+        # Rank by regular rate, not the promo. PS discounts vary card to card,
+        # so the cheapest advertised figure is not the cheapest unit to rent.
+        if mapped not in size_prices or regular < size_prices[mapped]:
+            size_prices[mapped] = regular
             size_full[mapped] = {"regular": regular, "promo": online}
 
     pricing = empty_pricing()
@@ -473,8 +563,10 @@ def scrape_smartstop(url):
         if web is None:
             continue
         web, store = round(float(web)), round(float(store))
-        if key not in size_prices or web < size_prices[key]:
-            size_prices[key] = web
+        # Rank and report on the in-store (regular) rate. SmartStop's web rate is
+        # a ~50% promo that lapses, so it is not what a tenant ends up paying.
+        if key not in size_prices or store < size_prices[key]:
+            size_prices[key] = store
             size_full[key] = {"regular": store, "promo": web}
 
     pricing = empty_pricing()
@@ -483,9 +575,18 @@ def scrape_smartstop(url):
     return {"pricing": pricing, "pricingFull": size_full}, "ok"
 
 
+HONEA_CLIMATE_RE = re.compile(r"climate", re.I)
+
+
 def scrape_honea_egypt(url):
     """
     Honea Egypt: '$82.00/month' near dimensions; reversed dims normalized.
+
+    Climate interior cards are skipped, the same rule every other competitor gets.
+    Honea is a 3-story all-climate building, so in practice this leaves them with
+    no comparable inventory and they read as an honest blank. Before the filter
+    their climate rates (a 10x15 at $181.50, a 10x30 at $450) were flowing into a
+    drive-up comparison and inflating the market.
 
     Honea only lists units it currently has available, so a run that finds
     priced units but none in a size we track is a real "sold out of everything
@@ -507,6 +608,8 @@ def scrape_honea_egypt(url):
         if not m:
             continue
         saw_priced_unit = True  # listing rendered; this size just isn't tracked
+        if HONEA_CLIMATE_RE.search(card):
+            continue  # climate interior, not comparable to our drive-up
         if key not in SIZES:
             continue
         keep_lowest(size_prices, key, round(float(m.group(1))))
@@ -639,6 +742,14 @@ def main():
             entry["scrapeStatus"] = "n/a"
             continue
 
+        # Intra-day runs skip the hosts that cost ScraperAPI credits. Montgomery
+        # is the only one, it is priced by hand and has not moved in weeks, so
+        # refetching it eight times a day buys nothing and burns credits. The
+        # 13:00 UTC run is a full scan and picks it up.
+        if SKIP_PROXY_HOSTS and target["url"] and any(h in target["url"] for h in PROXY_HOSTS):
+            print(f"\nSKIP {name} (proxied host, full scan only)")
+            continue
+
         print(f"\nSCAN {name}...")
         result, status = target["scraper"](target["url"])
         new_pricing = result["pricing"] if result else None
@@ -662,6 +773,7 @@ def main():
             if old_pricing.get(s) != new_pricing.get(s):
                 changes.append(f"  {name} {s}: ${old_pricing.get(s)} -> ${new_pricing.get(s)}")
 
+        entry["_prevPricing"] = dict(old_pricing)
         entry["pricing"] = new_pricing
         entry["pricingFull"] = new_full
         entry["scrapeStatus"] = "ok"
@@ -671,6 +783,9 @@ def main():
 
     data["lastUpdated"] = now_utc()
     data["competitors"] = [existing[t["name"]] for t in scrape_targets if t["name"] in existing]
+
+    flag_notes = flag_pricing(data["competitors"])
+    data["flagCount"] = sum(len(c.get("flags", {})) for c in data["competitors"])
 
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -698,6 +813,12 @@ def main():
             print(c)
     else:
         print("NO CHANGES: All prices unchanged")
+    if flag_notes:
+        print(f"\nFLAGGED: {len(flag_notes)} value(s) worth a look:")
+        for n in flag_notes:
+            print(n)
+    else:
+        print("\nFLAGGED: none")
     print(f"SAVED: {data_path}")
     print("=" * 60)
     return 0
