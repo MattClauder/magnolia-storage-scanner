@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-08 17:06 UTC",
+  "lastUpdated": "2026-09-09 02:30 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -21,37 +21,41 @@
       ],
       "notes": "All units climate-controlled interior. Lowest advertised (online) rates shown.",
       "pricing": {
-        "5x10": 39,
-        "10x10": 40,
-        "10x15": 104,
-        "10x20": 169,
-        "10x30": 264
+        "5x10": 46,
+        "10x10": 62,
+        "10x15": 117,
+        "10x20": 216,
+        "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-08 17:05 UTC",
+      "lastVerified": "2026-09-09 02:29 UTC",
       "pricingFull": {
         "5x10": {
-          "regular": 52,
-          "promo": 39
+          "regular": 46,
+          "promo": 34
         },
         "10x10": {
-          "regular": 67,
-          "promo": 40
+          "regular": 62,
+          "promo": 37
         },
         "10x15": {
-          "regular": 139,
-          "promo": 104
+          "regular": 117,
+          "promo": 70
         },
         "10x20": {
-          "regular": 226,
-          "promo": 169
-        },
-        "10x30": {
-          "regular": 352,
-          "promo": 264
+          "regular": 216,
+          "promo": 162
         }
       },
-      "promoNote": "Online rate; 40% off first 4 months online, or 2 months 50% off in-store"
+      "promoNote": "Online rate; 40% off first 4 months online, or 2 months 50% off in-store",
+      "flags": {
+        "10x10": [
+          "moved +55% since last run (was $40)"
+        ],
+        "10x20": [
+          "moved +28% since last run (was $169)"
+        ]
+      }
     },
     {
       "name": "Public Storage (FM 1488)",
@@ -72,14 +76,14 @@
       ],
       "notes": "Non-standard sizes; closest equivalents shown at online rates. 10x30 offered as uncovered RV parking only (excluded). $1 first month promo. Admin fee: $29.",
       "pricing": {
-        "5x10": 24,
-        "10x10": 44,
-        "10x15": 69,
-        "10x20": 74,
+        "5x10": 40,
+        "10x10": 74,
+        "10x15": 98,
+        "10x20": 124,
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-08 17:05 UTC",
+      "lastVerified": "2026-09-09 02:29 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 40,
@@ -98,7 +102,21 @@
           "promo": 74
         }
       },
-      "promoNote": "Online-only rate; $1 first month promo, $29 admin fee"
+      "promoNote": "Online-only rate; $1 first month promo, $29 admin fee",
+      "flags": {
+        "5x10": [
+          "moved +67% since last run (was $24)"
+        ],
+        "10x10": [
+          "moved +68% since last run (was $44)"
+        ],
+        "10x15": [
+          "moved +42% since last run (was $69)"
+        ],
+        "10x20": [
+          "moved +68% since last run (was $74)"
+        ]
+      }
     },
     {
       "name": "Public Storage (FM 2978)",
@@ -122,18 +140,27 @@
         "5x10": null,
         "10x10": null,
         "10x15": null,
-        "10x20": 136,
-        "10x30": null
+        "10x20": 170,
+        "10x30": 250
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-08 17:05 UTC",
+      "lastVerified": "2026-09-09 02:29 UTC",
       "pricingFull": {
         "10x20": {
           "regular": 170,
           "promo": 136
+        },
+        "10x30": {
+          "regular": 250,
+          "promo": 200
         }
       },
-      "promoNote": "Online-only rate; $1 first month promo, $29 admin fee"
+      "promoNote": "Online-only rate; $1 first month promo, $29 admin fee",
+      "flags": {
+        "10x20": [
+          "moved +25% since last run (was $136)"
+        ]
+      }
     },
     {
       "name": "SmartStop Self Storage",
@@ -153,11 +180,11 @@
       ],
       "notes": "Formerly Amazing Spaces; rebranded to SmartStop. Rates read directly from their units API. Drive-up rates shown; their 10x10 is climate-controlled interior only, so it is not a comparable.",
       "pricing": {
-        "5x10": 24,
+        "5x10": 49,
         "10x10": null,
-        "10x15": 68,
-        "10x20": 90,
-        "10x30": 132
+        "10x15": 136,
+        "10x20": 181,
+        "10x30": 265
       },
       "scrapeStatus": "ok",
       "pricingFull": {
@@ -178,7 +205,21 @@
           "promo": 132
         }
       },
-      "lastVerified": "2026-09-08 17:05 UTC"
+      "lastVerified": "2026-09-09 02:29 UTC",
+      "flags": {
+        "5x10": [
+          "moved +104% since last run (was $24)"
+        ],
+        "10x15": [
+          "moved +100% since last run (was $68)"
+        ],
+        "10x20": [
+          "moved +101% since last run (was $90)"
+        ],
+        "10x30": [
+          "moved +101% since last run (was $132)"
+        ]
+      }
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -200,27 +241,14 @@
       "notes": "All units climate-controlled interior. 3-story building.",
       "pricing": {
         "5x10": null,
-        "10x10": 124,
-        "10x15": 182,
+        "10x10": null,
+        "10x15": null,
         "10x20": null,
-        "10x30": 450
+        "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-08 17:05 UTC",
-      "pricingFull": {
-        "10x10": {
-          "regular": 124,
-          "promo": null
-        },
-        "10x15": {
-          "regular": 182,
-          "promo": null
-        },
-        "10x30": {
-          "regular": 450,
-          "promo": null
-        }
-      }
+      "lastVerified": "2026-09-09 02:29 UTC",
+      "pricingFull": {}
     },
     {
       "name": "Montgomery Self Storage",
@@ -247,7 +275,7 @@
         "10x30": 265
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-08 17:06 UTC",
+      "lastVerified": "2026-09-09 02:30 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 55,
@@ -298,7 +326,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-08 17:06 UTC",
+      "lastVerified": "2026-09-09 02:30 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -4317,6 +4345,68 @@
           "10x30": 225
         }
       }
+    },
+    {
+      "date": "2026-09-09",
+      "my": {
+        "5x10": 45,
+        "10x10": 65,
+        "10x15": 135,
+        "10x20": 165,
+        "10x30": 280
+      },
+      "facilities": {
+        "Lockaway Storage": {
+          "5x10": 46,
+          "10x10": 62,
+          "10x15": 117,
+          "10x20": 216,
+          "10x30": null
+        },
+        "Public Storage (FM 1488)": {
+          "5x10": 40,
+          "10x10": 74,
+          "10x15": 98,
+          "10x20": 124,
+          "10x30": null
+        },
+        "Public Storage (FM 2978)": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": null,
+          "10x20": 170,
+          "10x30": 250
+        },
+        "SmartStop Self Storage": {
+          "5x10": 49,
+          "10x10": null,
+          "10x15": 136,
+          "10x20": 181,
+          "10x30": 265
+        },
+        "Honea Egypt Self Storage": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": null,
+          "10x20": null,
+          "10x30": null
+        },
+        "Montgomery Self Storage": {
+          "5x10": 55,
+          "10x10": 80,
+          "10x15": 145,
+          "10x20": 160,
+          "10x30": 265
+        },
+        "Woodlands Storage & Office": {
+          "5x10": null,
+          "10x10": 75,
+          "10x15": null,
+          "10x20": 175,
+          "10x30": 225
+        }
+      }
     }
-  ]
+  ],
+  "flagCount": 11
 }
