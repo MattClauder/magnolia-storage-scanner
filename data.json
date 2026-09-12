@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-12 10:31 UTC",
+  "lastUpdated": "2026-09-12 15:24 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-12 10:31 UTC",
+      "lastVerified": "2026-09-12 15:24 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 46,
@@ -75,7 +75,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-12 10:31 UTC",
+      "lastVerified": "2026-09-12 15:24 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 40,
@@ -122,7 +122,7 @@
         "10x30": 250
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-12 10:31 UTC",
+      "lastVerified": "2026-09-12 15:24 UTC",
       "pricingFull": {
         "10x20": {
           "regular": 166,
@@ -153,28 +153,28 @@
       ],
       "notes": "Formerly Amazing Spaces; rebranded to SmartStop. Rates read directly from their units API. Drive-up rates shown; their 10x10 is climate-controlled interior only, so it is not a comparable.",
       "pricing": {
-        "5x10": 49,
+        "5x10": 44,
         "10x10": null,
-        "10x15": 136,
-        "10x20": 181,
+        "10x15": 122,
+        "10x20": 163,
         "10x30": null
       },
       "scrapeStatus": "ok",
       "pricingFull": {
         "5x10": {
-          "regular": 49,
-          "promo": 24
+          "regular": 44,
+          "promo": 22
         },
         "10x15": {
-          "regular": 136,
-          "promo": 68
+          "regular": 122,
+          "promo": 61
         },
         "10x20": {
-          "regular": 181,
-          "promo": 90
+          "regular": 163,
+          "promo": 82
         }
       },
-      "lastVerified": "2026-09-12 10:31 UTC"
+      "lastVerified": "2026-09-12 15:24 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -202,7 +202,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-12 10:31 UTC",
+      "lastVerified": "2026-09-12 15:24 UTC",
       "pricingFull": {}
     },
     {
@@ -281,7 +281,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-09-12 10:31 UTC",
+      "lastVerified": "2026-09-12 15:24 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -4516,10 +4516,10 @@
           "10x30": 250
         },
         "SmartStop Self Storage": {
-          "5x10": 49,
+          "5x10": 44,
           "10x10": null,
-          "10x15": 136,
-          "10x20": 181,
+          "10x15": 122,
+          "10x20": 163,
           "10x30": null
         },
         "Honea Egypt Self Storage": {
