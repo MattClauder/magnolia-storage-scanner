@@ -135,6 +135,19 @@ def now_utc():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
+# Proxied (credit-costing) hosts are refetched once their data is this old.
+PROXY_REFRESH_HOURS = 20
+
+
+def hours_since(stamp):
+    """Hours since a 'YYYY-MM-DD HH:MM UTC' stamp; infinity if missing/bad."""
+    try:
+        t = datetime.strptime(stamp, "%Y-%m-%d %H:%M UTC").replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - t).total_seconds() / 3600
+    except Exception:
+        return float("inf")
+
+
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
 
@@ -441,6 +454,10 @@ def scrape_public_storage(url, facility_name):
 
     size_prices = {}
     size_full = {}
+    # Exact-dimension units (a real 10'x15') always beat area-band stand-ins
+    # (a 7'x19' at 133 sq ft). Without this a cheaper odd-shaped unit won the
+    # size and FM 1488's 10x15 read $92 while its actual 10x15 was $126.
+    exact_sizes = set()
     for i, m in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else min(len(text), m.end() + 900)
         block = text[m.start():end]
@@ -455,14 +472,23 @@ def scrape_public_storage(url, facility_name):
         mapped = ps_size_key(m.group(1), m.group(2))
         if not mapped:
             continue
+        lo, hi = sorted((float(m.group(1)), float(m.group(2))))
+        is_exact = f"{lo:g}x{hi:g}" == mapped
         online = round(float(m.group(3)))
         mi = PS_INSTORE_RE.search(block)
         regular = round(float(mi.group(1))) if mi else online
         # Rank by regular rate, not the promo. PS discounts vary card to card,
         # so the cheapest advertised figure is not the cheapest unit to rent.
-        if mapped not in size_prices or regular < size_prices[mapped]:
+        if mapped in exact_sizes and not is_exact:
+            continue  # a true-size unit already holds this slot
+        if (mapped not in size_prices
+                or (is_exact and mapped not in exact_sizes)
+                or regular < size_prices[mapped]):
             size_prices[mapped] = regular
-            size_full[mapped] = {"regular": regular, "promo": online}
+            size_full[mapped] = {"regular": regular, "promo": online,
+                                 "unit": f"{m.group(1)}x{m.group(2)}"}
+            if is_exact:
+                exact_sizes.add(mapped)
 
     pricing = empty_pricing()
     pricing.update({s: p for s, p in size_prices.items() if s in pricing})
@@ -746,8 +772,13 @@ def main():
         # is the only one, it is priced by hand and has not moved in weeks, so
         # refetching it eight times a day buys nothing and burns credits. The
         # 13:00 UTC run is a full scan and picks it up.
-        if SKIP_PROXY_HOSTS and target["url"] and any(h in target["url"] for h in PROXY_HOSTS):
-            print(f"\nSKIP {name} (proxied host, full scan only)")
+        # The skip is gated on data age, not the clock: the workflow used to
+        # wait for a 13:00 UTC run that the every-3-hours cron never produces,
+        # so Montgomery went unverified from Sep 9 while still reading "ok".
+        if (SKIP_PROXY_HOSTS and target["url"]
+                and any(h in target["url"] for h in PROXY_HOSTS)
+                and hours_since(entry.get("lastVerified")) < PROXY_REFRESH_HOURS):
+            print(f"\nSKIP {name} (proxied host, verified {entry.get('lastVerified')})")
             continue
 
         print(f"\nSCAN {name}...")

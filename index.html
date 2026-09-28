@@ -417,6 +417,14 @@ async function loadData() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     fullData = await resp.json();
     competitors = fullData.competitors;
+    // A facility whose prices have not been re-verified in 36 hours is shown
+    // as unverified even if its last recorded status was "ok".
+    competitors.forEach(c => {
+      if (c.scrapeStatus === 'ok' && c.lastVerified) {
+        const t = Date.parse(c.lastVerified.replace(' UTC', 'Z').replace(' ', 'T'));
+        if (!isNaN(t) && Date.now() - t > 36 * 3600 * 1000) c.scrapeStatus = 'stale';
+      }
+    });
 
     // Load myPricing from data.json
     if (fullData.myPricing) {

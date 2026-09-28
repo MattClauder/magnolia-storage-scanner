@@ -24,12 +24,14 @@ jobs:
           python-version: '3.12'
 
       # Montgomery is fetched through ScraperAPI, which costs credits per call.
-      # It is hand-priced and unchanged for weeks, so only the 13:00 UTC run
-      # (8am CDT) pays for it; the other seven runs skip it and cost nothing.
+      # Scheduled runs pass SKIP_PROXY_HOSTS; scraper.py still refetches it
+      # whenever its last verification is 20+ hours old, so it refreshes about
+      # once a day. (The old "hour == 13" check never fired on this every-3-hours
+      # cron, which left Montgomery unverified for weeks.) Manual runs are full.
       - name: Decide scan scope
         id: scope
         run: |
-          if [ "$(date -u +%H)" = "13" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "skip_proxy=" >> "$GITHUB_OUTPUT"
             echo "Full scan (includes proxied hosts)"
           else
