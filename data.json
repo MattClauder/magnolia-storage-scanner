@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-10 21:28 UTC",
+  "lastUpdated": "2026-10-11 05:23 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-10 21:28 UTC",
+      "lastVerified": "2026-10-11 05:23 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 29,
@@ -75,7 +75,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-10 21:28 UTC",
+      "lastVerified": "2026-10-11 05:23 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 46,
@@ -126,7 +126,7 @@
         "10x30": 233
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-10 21:28 UTC",
+      "lastVerified": "2026-10-11 05:23 UTC",
       "pricingFull": {
         "10x20": {
           "regular": 175,
@@ -184,7 +184,7 @@
           "promo": 80
         }
       },
-      "lastVerified": "2026-10-10 21:28 UTC"
+      "lastVerified": "2026-10-11 05:23 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -212,7 +212,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-10 21:28 UTC",
+      "lastVerified": "2026-10-11 05:23 UTC",
       "pricingFull": {}
     },
     {
@@ -291,7 +291,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-10 21:28 UTC",
+      "lastVerified": "2026-10-11 05:23 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -6204,6 +6204,67 @@
     },
     {
       "date": "2026-10-10",
+      "my": {
+        "5x10": 45,
+        "10x10": 65,
+        "10x15": 130,
+        "10x20": 165,
+        "10x30": 280
+      },
+      "facilities": {
+        "Lockaway Storage": {
+          "5x10": 29,
+          "10x10": 56,
+          "10x15": 105,
+          "10x20": 146,
+          "10x30": null
+        },
+        "Public Storage (FM 1488)": {
+          "5x10": 46,
+          "10x10": 86,
+          "10x15": 76,
+          "10x20": 124,
+          "10x30": null
+        },
+        "Public Storage (FM 2978)": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": null,
+          "10x20": 175,
+          "10x30": 233
+        },
+        "SmartStop Self Storage": {
+          "5x10": 43,
+          "10x10": 81,
+          "10x15": 120,
+          "10x20": 159,
+          "10x30": null
+        },
+        "Honea Egypt Self Storage": {
+          "5x10": null,
+          "10x10": null,
+          "10x15": null,
+          "10x20": null,
+          "10x30": null
+        },
+        "Montgomery Self Storage": {
+          "5x10": 55,
+          "10x10": 80,
+          "10x15": 145,
+          "10x20": 160,
+          "10x30": 265
+        },
+        "Woodlands Storage & Office": {
+          "5x10": null,
+          "10x10": 75,
+          "10x15": null,
+          "10x20": 175,
+          "10x30": 225
+        }
+      }
+    },
+    {
+      "date": "2026-10-11",
       "my": {
         "5x10": 45,
         "10x10": 65,
