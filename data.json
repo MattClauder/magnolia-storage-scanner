@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-12 10:34 UTC",
+  "lastUpdated": "2026-10-12 21:11 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-12 10:33 UTC",
+      "lastVerified": "2026-10-12 21:10 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 29,
@@ -75,26 +75,26 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-12 10:34 UTC",
+      "lastVerified": "2026-10-12 21:10 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 46,
-          "promo": 34,
+          "promo": 23,
           "unit": "5x9"
         },
         "10x15": {
           "regular": 76,
-          "promo": 57,
+          "promo": 38,
           "unit": "7x19"
         },
         "10x10": {
           "regular": 86,
-          "promo": 65,
+          "promo": 43,
           "unit": "7x14"
         },
         "10x20": {
           "regular": 124,
-          "promo": 94,
+          "promo": 62,
           "unit": "10x19"
         }
       },
@@ -126,7 +126,7 @@
         "10x30": 233
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-12 10:34 UTC",
+      "lastVerified": "2026-10-12 21:10 UTC",
       "pricingFull": {
         "10x20": {
           "regular": 175,
@@ -184,7 +184,7 @@
           "promo": 80
         }
       },
-      "lastVerified": "2026-10-12 10:34 UTC"
+      "lastVerified": "2026-10-12 21:10 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -212,7 +212,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-12 10:34 UTC",
+      "lastVerified": "2026-10-12 21:11 UTC",
       "pricingFull": {}
     },
     {
@@ -291,7 +291,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-12 10:34 UTC",
+      "lastVerified": "2026-10-12 21:11 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
