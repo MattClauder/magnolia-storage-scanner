@@ -223,7 +223,13 @@ def fetch(url, timeout=45):
         html = _fetch_static(_via_scraper_api(url), timeout=120)
         if html:
             return html
-        print("  NOTE: ScraperAPI fetch empty; falling back to direct")
+        # ScraperAPI throws occasional 500s. Retry once without JS render
+        # (Montgomery's prices are server-rendered), which is also cheaper.
+        print("  NOTE: ScraperAPI fetch empty; retrying once without render")
+        html = _fetch_static(_via_scraper_api(url, render=False), timeout=120)
+        if html:
+            return html
+        print("  NOTE: ScraperAPI retry empty; falling back to direct")
 
     try:
         from playwright.sync_api import sync_playwright
