@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22 04:19 UTC",
+  "lastUpdated": "2026-10-22 11:35 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-22 04:19 UTC",
+      "lastVerified": "2026-10-22 11:34 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 29,
@@ -75,7 +75,7 @@
         "10x30": 244
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-22 04:19 UTC",
+      "lastVerified": "2026-10-22 11:34 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 46,
@@ -131,7 +131,7 @@
         "10x30": 212
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-22 04:19 UTC",
+      "lastVerified": "2026-10-22 11:34 UTC",
       "pricingFull": {
         "10x30": {
           "regular": 212,
@@ -180,7 +180,7 @@
           "promo": 80
         }
       },
-      "lastVerified": "2026-10-22 04:19 UTC"
+      "lastVerified": "2026-10-22 11:34 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -208,7 +208,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-22 04:19 UTC",
+      "lastVerified": "2026-10-22 11:35 UTC",
       "pricingFull": {}
     },
     {
@@ -287,7 +287,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-22 04:19 UTC",
+      "lastVerified": "2026-10-22 11:35 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
