@@ -743,13 +743,17 @@ def main():
     scrape_targets = [
         {"name": "Lockaway Storage",
          "url": "https://www.lockaway-storage.com/storage-units/texas/magnolia/lockaway-storage-1488-411002/",
-         "scraper": scrape_lockaway},
+         "scraper": scrape_lockaway,
+         "notes": "Drive-up units shown; climate-controlled interior units excluded. Lowest advertised (online) rates shown. 12x30 with 14' tall door is an RV bay, excluded.",
+         "promoNote": "Online rate; 40% off first 4 months"},
         {"name": "Public Storage (FM 1488)",
          "url": "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
-         "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 1488)")},
+         "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 1488)"),
+         "notes": "Non-standard sizes; closest drive-up equivalents shown at in-store rent (online price is lower). 10x30 = 10x28 rollup-door unit; uncovered vehicle parking excluded. Admin fee: $29."},
         {"name": "Public Storage (FM 2978)",
          "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
-         "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)")},
+         "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)"),
+         "notes": "Not comparable: enclosed units are climate-controlled interior, and the only drive-up 10x30 is a bay-door RV/boat bay (excluded). Admin fee: $29."},
         {"name": "SmartStop Self Storage",
          "url": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
          "scraper": scrape_smartstop},
@@ -761,7 +765,8 @@ def main():
          "scraper": scrape_montgomery},
         {"name": "Woodlands Storage & Office",
          "url": "https://www.woodlandssao.com/units",
-         "scraper": scrape_woodlands_sao},
+         "scraper": scrape_woodlands_sao,
+         "notes": "Locally owned. 50% off first 3 months promo. Drive-up units with power."},
         {"name": "Storage King USA",
          "url": None,  # RV/boat parking only, no enclosed units
          "scraper": None},
@@ -774,6 +779,11 @@ def main():
         name = target["name"]
         entry = existing.setdefault(name, {"name": name, "pricing": empty_pricing()})
         old_pricing = entry.get("pricing", empty_pricing())
+        # Display labels are owned here, not hand-edited in data.json, so a stale
+        # note ("all units climate-controlled") can't outlive the site it described.
+        for k in ("notes", "promoNote"):
+            if k in target:
+                entry[k] = target[k]
 
         if target["scraper"] is None:
             print(f"\nSKIP {name} (no enclosed-unit pricing)")
