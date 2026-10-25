@@ -415,6 +415,10 @@ PS_OPEN_PARKING_RE = re.compile(r"uncovered|parking\s*space\s*only", re.I)
 # Treat a vehicle tag as parking only when the card is not marked Enclosed.
 PS_VEHICLE_RE = re.compile(r"RV,\s*Boat,\s*or\s*Vehicle|Vehicle\s*Parking|Parking\s*\d", re.I)
 PS_ENCLOSED_RE = re.compile(r"\bEnclosed\b", re.I)
+# "Bay Door" cards are tall-door RV/boat bays (FM 2978's 10x30, FM 1488's 10x42),
+# the same product as Lockaway's 14'-door 12x30 that LOCKAWAY_MAP already drops.
+# Excluding both keeps the 10x30 comparison consistent: rollup-door units only.
+PS_BAY_DOOR_RE = re.compile(r"\bBay\s*Door\b", re.I)
 
 # Public Storage sells odd dimensions (5x9, 7x19, 10x19, 15x14...). Map each to
 # the nearest Magnolia size by floor area instead of maintaining an endless
@@ -471,6 +475,8 @@ def scrape_public_storage(url, facility_name):
             continue  # open-air space, never a unit
         if PS_VEHICLE_RE.search(block) and not PS_ENCLOSED_RE.search(block):
             continue  # vehicle space that is not an enclosed unit
+        if PS_BAY_DOOR_RE.search(block):
+            continue  # RV/boat bay, not a storage unit
         if PS_CLIMATE_RE.search(block):
             continue  # interior climate unit, not comparable to our drive-up
         if "Drive up access" not in block:
