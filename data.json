@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-26 04:21 UTC",
+  "lastUpdated": "2026-10-26 12:42 UTC",
   "competitors": [
     {
       "name": "Lockaway Storage",
@@ -28,7 +28,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-26 04:21 UTC",
+      "lastVerified": "2026-10-26 12:42 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 29,
@@ -47,12 +47,7 @@
           "promo": 88
         }
       },
-      "promoNote": "Online rate; 40% off first 4 months",
-      "flags": {
-        "10x20": [
-          "moved -25% since last run (was $195)"
-        ]
-      }
+      "promoNote": "Online rate; 40% off first 4 months"
     },
     {
       "name": "Public Storage (FM 1488)",
@@ -80,7 +75,7 @@
         "10x30": 150
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-26 04:21 UTC",
+      "lastVerified": "2026-10-26 12:42 UTC",
       "pricingFull": {
         "5x10": {
           "regular": 46,
@@ -136,7 +131,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-26 04:21 UTC",
+      "lastVerified": "2026-10-26 12:42 UTC",
       "pricingFull": {},
       "promoNote": "Online-only rate; $1 first month promo, $29 admin fee"
     },
@@ -179,7 +174,7 @@
           "promo": 88
         }
       },
-      "lastVerified": "2026-10-26 04:21 UTC"
+      "lastVerified": "2026-10-26 12:42 UTC"
     },
     {
       "name": "Honea Egypt Self Storage",
@@ -207,7 +202,7 @@
         "10x30": null
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-26 04:21 UTC",
+      "lastVerified": "2026-10-26 12:42 UTC",
       "pricingFull": {}
     },
     {
@@ -286,7 +281,7 @@
         "10x30": 225
       },
       "scrapeStatus": "ok",
-      "lastVerified": "2026-10-26 04:21 UTC",
+      "lastVerified": "2026-10-26 12:42 UTC",
       "pricingFull": {
         "10x10": {
           "regular": 75,
@@ -7235,5 +7230,5 @@
       }
     }
   ],
-  "flagCount": 1
+  "flagCount": 0
 }
