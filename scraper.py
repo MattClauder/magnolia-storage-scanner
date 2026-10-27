@@ -345,6 +345,9 @@ def keep_lowest(size_prices, key, val):
 
 LOCKAWAY_DRIVEUP_RE = re.compile(r"Drive-Up", re.I)
 LOCKAWAY_CLIMATE_RE = re.compile(r"Climate\s*Controlled", re.I)
+LOCKAWAY_STARTING_RE = re.compile(r"Starting\s*at\s*\$\s*(\d+(?:\.\d{1,2})?)", re.I)
+LOCKAWAY_INSTORE_RE = re.compile(r"In[-\s]?Store\s*\$", re.I)
+LOCKAWAY_PROMO_RE = re.compile(r"Promo\s*Rate", re.I)
 
 # 12x30 used to stand in for a 10x30 here. It should not: that card is a 360 sq ft
 # bay with a 14' tall door and a power outlet, an RV/boat bay rather than a storage
@@ -390,6 +393,13 @@ def scrape_lockaway(url):
         if not prices:
             continue
         promo, regular = prices[0], prices[-1]
+        # Some cards show "In-Store $195 Starting at $146" with no teaser. $146 is
+        # Lockaway's standing online rate (no expiry), not a promo; taking the
+        # in-store figure made 10x20 flap between $146 and $195 day to day as the
+        # site swapped card formats. Report the online rate, matching the note.
+        starting = LOCKAWAY_STARTING_RE.search(card)
+        if starting and LOCKAWAY_INSTORE_RE.search(card) and not LOCKAWAY_PROMO_RE.search(card):
+            regular, promo = round(float(starting.group(1))), None
         if mapped not in size_prices or regular < size_prices[mapped]:
             size_prices[mapped] = regular
             size_full[mapped] = {"regular": regular, "promo": promo}
@@ -749,7 +759,10 @@ def main():
         {"name": "Public Storage (FM 1488)",
          "url": "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 1488)"),
-         "notes": "Non-standard sizes; closest drive-up equivalents shown at in-store rent (online price is lower). 10x30 = 10x28 rollup-door unit; uncovered vehicle parking excluded. Admin fee: $29."},
+         "notes": "Non-standard sizes; closest drive-up equivalents shown at in-store rent (online price is lower). 10x30 = 10x28 rollup-door unit; uncovered vehicle parking excluded. Admin fee: $29.",
+         # Owned here so the old "$1 first month" label (no longer offered at this
+         # location as of 2026-10-27) can't linger in data.json.
+         "promoNote": "Online-only rate: 50% off first 4 months, then in-store rent; $29 admin fee"},
         {"name": "Public Storage (FM 2978)",
          "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)"),
