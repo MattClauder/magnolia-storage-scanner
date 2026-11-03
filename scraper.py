@@ -672,8 +672,15 @@ def scrape_honea_egypt(url):
 # Montgomery unit prices are formatted "$260.00/mo"; its promo banner uses
 # "$165/Month" (no cents, and typographic primes in "10' x 20'" that the
 # dimension regex misses, so the promo bled into the last unit's card). Match
-# ONLY the "$NN.NN/mo" unit format to exclude the promo.
-MONTGOMERY_PRICE_RE = re.compile(r"\$\s*(\d+\.\d{2})\s*/\s*mo\b", re.I)
+# ONLY the "/mo" unit format to exclude the promo ("mo\b" never matches "Month").
+# 2026-11-03: the site now renders unit prices without cents ("$ 55 /mo"), so the
+# cents-only pattern parsed zero prices and Montgomery read "failed" from Oct 27.
+# Cents are now optional.
+MONTGOMERY_PRICE_RE = re.compile(r"\$\s*(\d+(?:\.\d{2})?)\s*/\s*mo\b", re.I)
+# Climate cards read "Climate Controled" (sic) and "Climate/Temp"; non-climate
+# cards read "Non-Climate". Drop climate cards so a sold-out non-climate size
+# can't be filled by a climate rate.
+MONTGOMERY_CLIMATE_RE = re.compile(r"Climate\s*Control|Climate\s*/\s*Temp", re.I)
 
 
 def scrape_montgomery(url):
@@ -688,6 +695,8 @@ def scrape_montgomery(url):
     for key, card, prefix in segment_cards(html):
         if key not in SIZES:
             continue
+        if MONTGOMERY_CLIMATE_RE.search(card):
+            continue  # climate interior, not comparable to our drive-up
         prices = sorted(round(float(p)) for p in MONTGOMERY_PRICE_RE.findall(card))
         if prices:
             keep_lowest(size_prices, key, prices[0])
@@ -759,14 +768,18 @@ def main():
         {"name": "Public Storage (FM 1488)",
          "url": "https://www.publicstorage.com/self-storage-tx-magnolia/2360.html",
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 1488)"),
-         "notes": "Non-standard sizes; closest drive-up equivalents shown at in-store rent (online price is lower). 10x30 = 10x28 rollup-door unit; uncovered vehicle parking excluded. Admin fee: $29.",
-         # Owned here so the old "$1 first month" label (no longer offered at this
-         # location as of 2026-10-27) can't linger in data.json.
-         "promoNote": "Online-only rate: 50% off first 4 months, then in-store rent; $29 admin fee"},
+         # 2026-11-03: 10x28 is gone; the 10x30 slot is now a 12x24 rollup-door unit.
+         "notes": "Non-standard sizes; closest drive-up equivalents shown at in-store rent (online price is lower). 10x30 = 12x24 rollup-door unit; uncovered vehicle parking excluded. Admin fee: $29.",
+         # 2026-11-03: Halloween 50%-off ended. Online price is ~25% under in-store
+         # for months 1-4; small units add $1 first month, 10x19+ add 2nd month free.
+         "promoNote": "Online-only rate for months 1-4 (about 25% off), then in-store rent; $1 first month on small units, 2nd month free on large; $29 admin fee"},
         {"name": "Public Storage (FM 2978)",
          "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)"),
-         "notes": "Not comparable: enclosed units are climate-controlled interior, and the only drive-up 10x30 is a bay-door RV/boat bay (excluded). Admin fee: $29."},
+         # 2026-11-03: a drive-up rollup-door 10x20 is now listed, so this facility
+         # is no longer all-blank; promo is 2nd month free (no $1 first month on it).
+         "notes": "Only comparable unit is a drive-up rollup-door 10x20 (in-store rent shown). Other enclosed units are climate-controlled interior; the drive-up 10x30 is a bay-door RV/boat bay (excluded). Admin fee: $29.",
+         "promoNote": "Online-only rate for months 1-4 (20% off), then in-store rent; 2nd month free on the 10x20; $29 admin fee"},
         {"name": "SmartStop Self Storage",
          "url": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
          "scraper": scrape_smartstop},
