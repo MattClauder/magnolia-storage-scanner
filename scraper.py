@@ -352,8 +352,9 @@ LOCKAWAY_PROMO_RE = re.compile(r"Promo\s*Rate", re.I)
 # 12x30 used to stand in for a 10x30 here. It should not: that card is a 360 sq ft
 # bay with a 14' tall door and a power outlet, an RV/boat bay rather than a storage
 # unit, and quoting it as a 10x30 compared a vehicle bay against our drive-up 10x30.
-# Lockaway's only real 10x30 is climate interior, which the climate filter drops, so
-# this size is legitimately blank for them. The 8-foot-wide sizes are climate too.
+# As of 2026-11-09 Lockaway also lists a regular drive-up 10x30 (multi-door, no tall
+# door, "Starting at $209"), which counts; its climate 10x30 is still dropped. The
+# 8-foot-wide sizes are climate too.
 LOCKAWAY_MAP = {"5x10": "5x10", "10x10": "10x10", "10x15": "10x15",
                 "10x20": "10x20", "10x30": "10x30"}
 
@@ -770,9 +771,11 @@ def main():
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 1488)"),
          # 2026-11-03: 10x28 is gone; the 10x30 slot is now a 12x24 rollup-door unit.
          "notes": "Non-standard sizes; closest drive-up equivalents shown at in-store rent (online price is lower). 10x30 = 12x24 rollup-door unit; uncovered vehicle parking excluded. Admin fee: $29.",
-         # 2026-11-03: Halloween 50%-off ended. Online price is ~25% under in-store
-         # for months 1-4; small units add $1 first month, 10x19+ add 2nd month free.
-         "promoNote": "Online-only rate for months 1-4 (about 25% off), then in-store rent; $1 first month on small units, 2nd month free on large; $29 admin fee"},
+         # PS swaps this facility's web offer every week or two (50% off 4 months in
+         # Oct, ~25% off + $1/2nd-month-free on Nov 3, 50% off again Nov 9), so a
+         # specific figure here goes stale. Describe the structure; the promo column
+         # carries the live online price.
+         "promoNote": "Online-only discount for months 1-4 (offer changes often; promo column shows the current online price), then in-store rent; $29 admin fee"},
         {"name": "Public Storage (FM 2978)",
          "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)"),
