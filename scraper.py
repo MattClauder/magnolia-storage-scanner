@@ -779,10 +779,12 @@ def main():
         {"name": "Public Storage (FM 2978)",
          "url": "https://www.publicstorage.com/self-storage-tx-the-woodlands/5888.html",
          "scraper": lambda u: scrape_public_storage(u, "Public Storage (FM 2978)"),
-         # 2026-11-03: a drive-up rollup-door 10x20 is now listed, so this facility
-         # is no longer all-blank; promo is 2nd month free (no $1 first month on it).
-         "notes": "Only comparable unit is a drive-up rollup-door 10x20 (in-store rent shown). Other enclosed units are climate-controlled interior; the drive-up 10x30 is a bay-door RV/boat bay (excluded). Admin fee: $29.",
-         "promoNote": "Online-only rate for months 1-4 (20% off), then in-store rent; 2nd month free on the 10x20; $29 admin fee"},
+         # 2026-11-03: a drive-up rollup-door 10x20 was listed and counted.
+         # 2026-11-11: it is no longer listed, so this facility reads all-blank again.
+         # The labels below are worded to stay true whether or not the 10x20 is
+         # listed, so they do not need a rewrite each time it comes and goes.
+         "notes": "Usually no comparable unit. Enclosed units are climate-controlled interior; a drive-up rollup-door 10x20 is listed at times and counts when it is (in-store rent shown). The drive-up 10x25 falls between tracked sizes and the drive-up 10x30 is a bay-door RV/boat bay (both excluded). Admin fee: $29.",
+         "promoNote": "Online-only discount (offer changes often), then in-store rent; $29 admin fee"},
         {"name": "SmartStop Self Storage",
          "url": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
          "scraper": scrape_smartstop},
