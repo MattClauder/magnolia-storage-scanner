@@ -783,7 +783,9 @@ def main():
          # 2026-11-11: it is no longer listed, so this facility reads all-blank again.
          # The labels below are worded to stay true whether or not the 10x20 is
          # listed, so they do not need a rewrite each time it comes and goes.
-         "notes": "Usually no comparable unit. Enclosed units are climate-controlled interior; a drive-up rollup-door 10x20 is listed at times and counts when it is (in-store rent shown). The drive-up 10x25 falls between tracked sizes and the drive-up 10x30 is a bay-door RV/boat bay (both excluded). Admin fee: $29.",
+         # 2026-11-16: a drive-up rollup-door 10x10 ($77 in-store) appeared and the
+         # 10x20 ($147) returned, so the note no longer names only the 10x20.
+         "notes": "Most enclosed units are climate-controlled interior; drive-up rollup-door units (10x10, 10x20) are listed at times and count when they are (in-store rent shown). The drive-up 10x25 falls between tracked sizes and the drive-up 10x30 is a bay-door RV/boat bay (both excluded). Admin fee: $29.",
          "promoNote": "Online-only discount (offer changes often), then in-store rent; $29 admin fee"},
         {"name": "SmartStop Self Storage",
          "url": "https://smartstopselfstorage.com/find-storage/tx/magnolia/32620-fm-2978",
